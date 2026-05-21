@@ -88,3 +88,41 @@ def test_nav2_params_use_sim_ground_truth_frame_contract():
     assert bt_params["odom_topic"] == "/odom"
     assert local_params["global_frame"] == "odom"
     assert global_params["global_frame"] == "map"
+
+
+def test_main_launch_file_declares_required_mode_arguments():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    for argument in (
+        "robot_profile",
+        "map",
+        "params_file",
+        "perception_mode",
+        "localization_mode",
+        "use_sim_time",
+        "rviz",
+    ):
+        assert f'DeclareLaunchArgument("{argument}"' in launch_text
+
+
+def test_main_launch_defaults_to_g1_obstacle_2d_and_sim_ground_truth():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'default_value="g1"' in launch_text
+    assert 'default_value="obstacle_2d"' in launch_text
+    assert 'default_value="sim_ground_truth"' in launch_text
+    assert 'default_value="true"' in launch_text
+
+
+def test_main_launch_starts_nav2_and_g1_adapter():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "bringup_launch.py" in launch_text
+    assert "g1_cmd_vel_adapter" in launch_text
+    assert "nav2_bringup" in launch_text
