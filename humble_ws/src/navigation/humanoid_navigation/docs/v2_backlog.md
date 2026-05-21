@@ -148,3 +148,84 @@ Hardware validation must not start until these safety controls are in place:
    is poor.
 4. Footprint inflation may need to be increased to account for gait sway and
    arm configuration.
+
+## HUM-39: Bumi Profile and Adapter Requirements
+
+### Goal
+
+Prepare Bumi support without changing the Nav2 `cmd_vel` contract or the
+profile schema already used by G1.
+
+### Profile Schema
+
+`profiles/bumi.yaml` should use the same schema as `profiles/g1.yaml`:
+
+```yaml
+robot:
+  name: bumi
+  base_type: humanoid
+frames:
+  map: map
+  odom: odom
+  base_link: <bumi_base_frame>
+topics:
+  cmd_vel_in: /cmd_vel_smoothed
+  odom: <bumi_odom_topic>
+  rgbd_points: <bumi_rgbd_pointcloud_topic>
+  dds_command: <only_if_needed>
+motion_limits:
+  max_vel_x: <confirmed_limit>
+  max_vel_y: 0.0
+  max_vel_theta: <confirmed_limit>
+  max_accel_x: <confirmed_limit>
+  max_accel_theta: <confirmed_limit>
+footprint:
+  points: <confirmed_2d_footprint>
+localization:
+  mode: <sim_ground_truth_or_slam_localization_or_external_tf>
+adapter:
+  type: <twist_passthrough_or_bumi_dedicated_adapter>
+```
+
+The schema must remain compatible with the existing profile loader so launch
+logic can select `robot_profile:=g1` or `robot_profile:=bumi` without changing
+Nav2 params.
+
+### Adapter Decision
+
+The first integration question is whether Bumi consumes `geometry_msgs/Twist`
+directly:
+
+1. If Bumi accepts `geometry_msgs/Twist`, use a twist passthrough adapter or no
+   adapter beyond remapping `/cmd_vel_smoothed` to Bumi's command topic.
+2. If Bumi uses a robot-specific command API, add a dedicated adapter that
+   subscribes to `/cmd_vel_smoothed`, clamps the same profile limits, and
+   publishes the Bumi-specific command.
+
+In both cases, keep the Nav2 `cmd_vel` contract stable. Nav2 should not know
+whether the downstream robot is G1 DDS or Bumi-specific control.
+
+### Data Needed Before Implementation
+
+The missing Bumi data is:
+
+1. Base frame name and full TF tree.
+2. Odometry topic name, message type, frame IDs, covariance behavior, and rate.
+3. RGBD point cloud topic name, message type, frame ID, range, and rate.
+4. Head camera extrinsics relative to `base_link`.
+5. 2D footprint and inflation margin for walking sway.
+6. Velocity and acceleration limits accepted by the locomotion stack.
+7. Localization source and whether it publishes `map -> odom`.
+8. Command interface: direct `geometry_msgs/Twist`, action API, DDS, service, or
+   another transport.
+
+### Follow-up Issues
+
+Create implementation issues only after the missing Bumi data is available:
+
+1. Add `profiles/bumi.yaml` with confirmed frames, topics, footprint, and
+   limits.
+2. Implement the Bumi adapter if direct `geometry_msgs/Twist` is not available.
+3. Add Bumi launch/profile tests using the same profile-loader schema.
+4. Run Bumi simulation or hardware smoke tests against the unchanged Nav2
+   contract.

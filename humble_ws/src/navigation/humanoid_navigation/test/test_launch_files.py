@@ -197,3 +197,18 @@ def test_v2_backlog_defines_real_g1_validation_path():
     assert "emergency stop" in backlog_text
     assert "fall detection" in backlog_text
     assert "communication timeout" in backlog_text
+
+
+def test_v2_backlog_defines_bumi_profile_requirements():
+    backlog_text = (PACKAGE_ROOT / "docs" / "v2_backlog.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "HUM-39" in backlog_text
+    assert "Bumi" in backlog_text
+    assert "profiles/bumi.yaml" in backlog_text
+    assert "same schema as `profiles/g1.yaml`" in backlog_text
+    assert "geometry_msgs/Twist" in backlog_text
+    assert "dedicated adapter" in backlog_text
+    assert "Nav2 `cmd_vel` contract" in backlog_text
+    assert "missing Bumi data" in backlog_text
