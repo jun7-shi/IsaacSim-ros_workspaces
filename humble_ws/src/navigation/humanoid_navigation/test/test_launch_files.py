@@ -182,3 +182,18 @@ def test_v2_backlog_defines_slam_localization_path():
     assert "static-map localization" in backlog_text
     assert "map save/update" in backlog_text
     assert "`map`, `odom`, `base_link`, `/odom`" in backlog_text
+
+
+def test_v2_backlog_defines_real_g1_validation_path():
+    backlog_text = (PACKAGE_ROOT / "docs" / "v2_backlog.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "HUM-38" in backlog_text
+    assert "real G1" in backlog_text
+    assert "low-speed" in backlog_text
+    assert "/g1/head_rgbd/points" in backlog_text
+    assert "camera extrinsics" in backlog_text
+    assert "emergency stop" in backlog_text
+    assert "fall detection" in backlog_text
+    assert "communication timeout" in backlog_text
