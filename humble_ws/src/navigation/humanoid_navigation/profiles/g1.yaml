@@ -1,0 +1,38 @@
+frames:
+  map: map
+  odom: odom
+  base: base_link
+
+topics:
+  odom: /odom
+  cmd_vel: /cmd_vel_smoothed
+
+perception:
+  pointcloud_topic: /g1/head_rgbd/points
+  obstacle_max_range: 4.0
+  raytrace_max_range: 5.0
+  min_obstacle_height: 0.05
+  max_obstacle_height: 1.8
+  enable_global_obstacles: false
+
+motion:
+  enable_lateral: false
+  min_vel_x: -0.2
+  max_vel_x: 0.5
+  max_vel_y: 0.0
+  max_vel_theta: 0.8
+  acc_lim_x: 0.8
+  acc_lim_y: 0.0
+  acc_lim_theta: 1.2
+
+footprint:
+  polygon: "[[0.22, 0.18], [0.22, -0.18], [-0.18, -0.18], [-0.18, 0.18]]"
+  padding: 0.08
+
+dds:
+  topic: rt/run_command/cmd
+  default_height: 0.8
+  invert_y: true
+  invert_yaw: true
+  cmd_timeout_sec: 0.25
+  publish_rate_hz: 50.0
