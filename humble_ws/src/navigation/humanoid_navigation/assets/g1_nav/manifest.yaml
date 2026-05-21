@@ -1,0 +1,15 @@
+asset: g1_29dof_with_dex1_nav_depth.usd
+source_robot_asset: /data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd
+mount_link: d435_link
+camera_prim: /Robot/d435_link/head_d435_depth_camera
+camera_frame: g1_head_d435_depth_optical_frame
+pointcloud_topic: /g1/head_rgbd/points
+depth_topic: /g1/head_rgbd/depth
+rgb_topic: /g1/head_rgbd/rgb
+camera_info_topic: /g1/head_rgbd/camera_info
+default_map_package: carter_navigation
+default_map: maps/carter_warehouse_navigation.yaml
+notes:
+  - This package owns the navigation-specific USD layer.
+  - Unitree source robot assets remain unmodified.
+  - Isaac Sim ROS2 bridge or an IsaacLab publisher must convert the camera output to sensor_msgs/PointCloud2 on pointcloud_topic.

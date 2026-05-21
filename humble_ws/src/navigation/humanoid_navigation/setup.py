@@ -17,6 +17,7 @@ setup(
         (f"share/{package_name}/params", glob("params/*.yaml")),
         (f"share/{package_name}/rviz", glob("rviz/*.rviz")),
         (f"share/{package_name}/docs", glob("docs/*.md")),
+        (f"share/{package_name}/assets/g1_nav", glob("assets/g1_nav/*")),
     ],
     install_requires=["setuptools", "PyYAML"],
     zip_safe=True,

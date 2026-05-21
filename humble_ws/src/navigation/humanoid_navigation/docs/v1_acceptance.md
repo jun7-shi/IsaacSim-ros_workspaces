@@ -83,6 +83,26 @@ The G1 camera presets include a front camera at:
 /World/envs/env_.*/Robot/d435_link/front_cam
 ```
 
+This package now owns the navigation-specific G1 USD layer:
+
+```text
+src/navigation/humanoid_navigation/assets/g1_nav/g1_29dof_with_dex1_nav_depth.usd
+```
+
+The layer references the original Unitree `g1-29dof_wholebody_dex1` robot asset
+and adds a D435-style depth camera under `d435_link`. Unitree source assets are
+not overwritten. The matching manifest is:
+
+```text
+src/navigation/humanoid_navigation/assets/g1_nav/manifest.yaml
+```
+
+For the first HUM-36 acceptance map, reuse the existing Carter warehouse map:
+
+```text
+src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml
+```
+
 ## Blocked Acceptance Items
 
 The full HUM-36 end-to-end acceptance is blocked by missing ROS-side simulation
@@ -117,8 +137,10 @@ layer that publishes the exact Nav2-facing contract:
 2. `/odom` as `nav_msgs/Odometry`.
 3. `/g1/head_rgbd/points` as `sensor_msgs/PointCloud2`, generated from the G1
    head RGBD camera.
-4. A static occupancy map aligned to the Isaac Sim scene, or a documented map
-   generation step.
+4. A launchable Unitree G1 nav task that points its robot USD path at this
+   package's `assets/g1_nav/g1_29dof_with_dex1_nav_depth.usd`.
+5. The first acceptance run can use the existing Carter warehouse occupancy map.
+   A G1-scene-aligned map remains a follow-up once navigation motion works.
 
 Once those interfaces exist, rerun the commands above and record:
 
