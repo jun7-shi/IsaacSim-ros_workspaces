@@ -1,0 +1,10 @@
+localization_mode: sim_ground_truth
+required_tf: [map, odom, base_link]
+odom_topic: /odom
+reserved_modes:
+  - slam_localization
+  - external_tf
+notes:
+  - Isaac Sim must publish or bridge map->odom->base_link for V1.
+  - Missing TF should surface as Nav2 transform errors during runtime.
+  - slam_localization and external_tf are reserved launch modes for later phases.

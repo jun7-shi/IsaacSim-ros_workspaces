@@ -65,3 +65,26 @@ def test_voxel_3d_mode_uses_voxel_layer():
     assert voxel_layer["pointcloud"]["data_type"] == "PointCloud2"
     assert voxel_layer["pointcloud"]["marking"] is True
     assert voxel_layer["pointcloud"]["clearing"] is True
+
+
+def test_sim_ground_truth_localization_params_document_required_frames():
+    params = load_yaml("params/localization_sim_ground_truth.yaml")
+
+    assert params["localization_mode"] == "sim_ground_truth"
+    assert params["required_tf"] == ["map", "odom", "base_link"]
+    assert params["odom_topic"] == "/odom"
+    assert "slam_localization" in params["reserved_modes"]
+    assert "external_tf" in params["reserved_modes"]
+
+
+def test_nav2_params_use_sim_ground_truth_frame_contract():
+    params = load_yaml("config/nav2_params.yaml")
+    bt_params = params["bt_navigator"]["ros__parameters"]
+    local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
+    global_params = params["global_costmap"]["global_costmap"]["ros__parameters"]
+
+    assert bt_params["global_frame"] == "map"
+    assert bt_params["robot_base_frame"] == "base_link"
+    assert bt_params["odom_topic"] == "/odom"
+    assert local_params["global_frame"] == "odom"
+    assert global_params["global_frame"] == "map"
