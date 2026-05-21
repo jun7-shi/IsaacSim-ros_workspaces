@@ -29,8 +29,12 @@ conda run -n unitree_sim_lab python sim_main.py \
   --enable_dex1_dds \
   --enable_nav_ros_tf_odom \
   --enable_nav_ros_pointcloud \
-  --no_render
+  --headless
 ```
+
+Use `--headless`, not `--no_render`, for this acceptance path. The RGBD
+`depth_pcl` publisher depends on Isaac Sim render product updates, while
+`--no_render` suppresses regular rendering.
 
 Launch V1 navigation from this ROS workspace:
 
@@ -123,10 +127,11 @@ same absolute path shown in the command above.
 
 ## Blocked Acceptance Items
 
-The full HUM-36 end-to-end acceptance is still pending a live run. The
-required Isaac Sim ROS-side interfaces now exist, but the current shell cannot
-run ROS CLI acceptance commands because of the local `librcl_logging_spdlog.so`
-runtime issue noted below:
+The full HUM-36 end-to-end acceptance is still pending a live run. The required
+Isaac Sim ROS-side interfaces now exist. The current inherited shell can hit a
+ROS CLI `librcl_logging_spdlog.so` runtime issue when Isaac Sim's ROS bridge
+libraries are left in `LD_LIBRARY_PATH`; run ROS CLI checks from a clean ROS
+shell or unset `LD_LIBRARY_PATH` before sourcing `/opt/ros/humble/setup.bash`.
 
 | Check | Required by Nav2 V1 | Current Unitree project finding | Status |
 | --- | --- | --- | --- |
@@ -139,15 +144,16 @@ runtime issue noted below:
 | G1 velocity command | DDS `rt/run_command/cmd` | DDS topic exists and matches the adapter | Ready for integration |
 | G1 nav task | Unitree IsaacLab task loads the package-owned RGBD USD | `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav` is registered in the Unitree worktree | Ready for integration |
 
-There is also a local ROS CLI runtime issue in the current `/opt/ros/humble`
-environment when running launch introspection:
+There is also a local ROS CLI runtime issue in the inherited shell when running
+launch introspection:
 
 ```text
 undefined symbol in librcl_logging_spdlog.so
 ```
 
-That issue prevents using `ros2 launch --show-args` as a local verification
-path in this shell. No conda packages were installed or modified.
+That issue is avoided by running `unset LD_LIBRARY_PATH` before sourcing
+`/opt/ros/humble/setup.bash`; `ros2 --help` succeeds under that clean
+environment. No conda packages were installed or modified.
 
 ## Required Follow-up Work
 
