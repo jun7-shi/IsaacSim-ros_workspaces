@@ -2,7 +2,7 @@
 
 Issue: HUM-36
 
-Date: 2026-05-21
+Date: 2026-05-22
 
 ## Goal
 
@@ -16,14 +16,15 @@ Validate the V1 Nav2 chain for Unitree G1 in Isaac Sim:
 
 ## Commands
 
-Start the G1 Wholebody Isaac Sim scene from the Unitree project:
+Start the G1 Wholebody Isaac Sim scene from the Unitree navigation worktree:
 
 ```bash
-cd /data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab
+cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
+export HUMANOID_NAVIGATION_G1_NAV_USD=/data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/assets/g1_nav/g1_29dof_with_dex1_nav_depth.usd
 conda run -n unitree_sim_lab python sim_main.py \
   --device cpu \
   --enable_cameras \
-  --task Isaac-Move-Cylinder-G129-Dex1-Wholebody \
+  --task Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav \
   --robot_type g129 \
   --enable_dex1_dds \
   --no_render
@@ -39,7 +40,7 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
   perception_mode:=obstacle_2d \
-  map:=/absolute/path/to/map.yaml
+  map:=/data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml
 ```
 
 Expected acceptance checks:
@@ -71,7 +72,8 @@ unitree_sdk2py True
 ```
 
 The Unitree G1 simulation project has mobile Wholebody tasks. The relevant V1
-task is `Isaac-Move-Cylinder-G129-Dex1-Wholebody`.
+navigation task is `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav`, added in the
+Unitree worktree branch `hum-nav-g1-nav-task` at commit `b3da65c`.
 
 The Unitree project registers the Wholebody command DDS object when the task
 contains `Wholebody` or `--enable_wholebody_dds` is set. Its subscriber listens
@@ -103,6 +105,10 @@ For the first HUM-36 acceptance map, reuse the existing Carter warehouse map:
 src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml
 ```
 
+The Unitree nav task points its robot USD path at the package-owned layer
+through `HUMANOID_NAVIGATION_G1_NAV_USD`; if unset, the task defaults to the
+same absolute path shown in the command above.
+
 ## Blocked Acceptance Items
 
 The full HUM-36 end-to-end acceptance is blocked by missing ROS-side simulation
@@ -110,13 +116,14 @@ interfaces in the referenced Unitree IsaacLab project:
 
 | Check | Required by Nav2 V1 | Current Unitree project finding | Status |
 | --- | --- | --- | --- |
-| Static map | `map_server` loads `map:=...` | Navigation launch supports this, but no aligned sample map is provided by the Unitree scene | Blocked |
+| Static map | `map_server` loads `map:=...` | Navigation launch can reuse `src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml` for the first smoke acceptance | Ready for integration |
 | TF | `map -> odom -> base_link` | No ROS TF publisher was found in the Unitree project | Blocked |
 | Odometry | `/odom` | No ROS odometry publisher was found in the Unitree project | Blocked |
 | RGBD costmap input | `/g1/head_rgbd/points` as `PointCloud2` | Camera pipeline currently exposes RGB image observations and shared-memory/image-server paths; no ROS `PointCloud2` publisher was found | Blocked |
 | Nav2 lifecycle | active Nav2 lifecycle nodes | Cannot validate without ROS TF, `/odom`, map alignment, and RGBD input | Blocked |
 | Local costmap updates | marking and clearing from RGBD `PointCloud2` | Costmap config is present, but there is no ROS point cloud input to drive it | Blocked |
 | G1 velocity command | DDS `rt/run_command/cmd` | DDS topic exists and matches the adapter | Ready for integration |
+| G1 nav task | Unitree IsaacLab task loads the package-owned RGBD USD | `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav` is registered in the Unitree worktree | Ready for integration |
 
 There is also a local ROS CLI runtime issue in the current `/opt/ros/humble`
 environment when running launch introspection:
@@ -137,9 +144,7 @@ layer that publishes the exact Nav2-facing contract:
 2. `/odom` as `nav_msgs/Odometry`.
 3. `/g1/head_rgbd/points` as `sensor_msgs/PointCloud2`, generated from the G1
    head RGBD camera.
-4. A launchable Unitree G1 nav task that points its robot USD path at this
-   package's `assets/g1_nav/g1_29dof_with_dex1_nav_depth.usd`.
-5. The first acceptance run can use the existing Carter warehouse occupancy map.
+4. The first acceptance run can use the existing Carter warehouse occupancy map.
    A G1-scene-aligned map remains a follow-up once navigation motion works.
 
 Once those interfaces exist, rerun the commands above and record:
