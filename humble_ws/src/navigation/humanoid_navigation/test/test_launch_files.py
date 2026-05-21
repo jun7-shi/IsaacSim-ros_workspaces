@@ -168,3 +168,17 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "rt/run_command/cmd" in acceptance_text
     assert "blocked" in acceptance_text.lower()
     assert "PointCloud2" in acceptance_text
+
+
+def test_v2_backlog_defines_slam_localization_path():
+    backlog_text = (PACKAGE_ROOT / "docs" / "v2_backlog.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "HUM-37" in backlog_text
+    assert "slam_localization" in backlog_text
+    assert "RGBD SLAM" in backlog_text
+    assert "map -> odom" in backlog_text
+    assert "static-map localization" in backlog_text
+    assert "map save/update" in backlog_text
+    assert "`map`, `odom`, `base_link`, `/odom`" in backlog_text
