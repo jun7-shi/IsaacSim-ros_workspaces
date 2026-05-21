@@ -152,3 +152,19 @@ def test_readme_documents_static_map_launch_and_required_topics():
     assert "/odom" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
     assert "/cmd_vel_smoothed" in readme_text
+
+
+def test_v1_acceptance_notes_document_sim_commands_and_blockers():
+    acceptance_text = (PACKAGE_ROOT / "docs" / "v1_acceptance.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "conda run -n unitree_sim_lab" in acceptance_text
+    assert "Isaac-Move-Cylinder-G129-Dex1-Wholebody" in acceptance_text
+    assert "ros2 launch humanoid_navigation humanoid_navigation.launch.py" in acceptance_text
+    assert "map -> odom -> base_link" in acceptance_text
+    assert "/odom" in acceptance_text
+    assert "/g1/head_rgbd/points" in acceptance_text
+    assert "rt/run_command/cmd" in acceptance_text
+    assert "blocked" in acceptance_text.lower()
+    assert "PointCloud2" in acceptance_text
