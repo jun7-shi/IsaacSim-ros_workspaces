@@ -163,11 +163,15 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav" in acceptance_text
     assert "HUMANOID_NAVIGATION_G1_NAV_USD" in acceptance_text
     assert "--enable_nav_ros_tf_odom" in acceptance_text
+    assert "--enable_nav_ros_pointcloud" in acceptance_text
     assert "ros2 launch humanoid_navigation humanoid_navigation.launch.py" in acceptance_text
     assert "src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml" in acceptance_text
     assert "map -> odom -> base_link" in acceptance_text
     assert "/odom" in acceptance_text
     assert "/g1/head_rgbd/points" in acceptance_text
+    assert "a08e9c8" in acceptance_text
+    assert "Ready for runtime verification" in acceptance_text
+    assert "no ROS `PointCloud2` publisher was found" not in acceptance_text
     assert "rt/run_command/cmd" in acceptance_text
     assert "blocked" in acceptance_text.lower()
     assert "PointCloud2" in acceptance_text
