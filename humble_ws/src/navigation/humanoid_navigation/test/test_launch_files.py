@@ -162,16 +162,20 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "conda run -n unitree_sim_lab" in acceptance_text
     assert "Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav" in acceptance_text
     assert "HUMANOID_NAVIGATION_G1_NAV_USD" in acceptance_text
+    assert "--enable_nav_ros_clock" in acceptance_text
     assert "--enable_nav_ros_tf_odom" in acceptance_text
     assert "--enable_nav_ros_pointcloud" in acceptance_text
     assert "--headless" in acceptance_text
     assert "  --no_render" not in acceptance_text
     assert "ros2 launch humanoid_navigation humanoid_navigation.launch.py" in acceptance_text
     assert "src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml" in acceptance_text
+    assert "OnPlaybackTick -> IsaacReadSimulationTime -> ROS2PublishClock" in acceptance_text
+    assert "OgnIsaacRunOneSimulationFrame" in acceptance_text
     assert "map -> odom -> base_link" in acceptance_text
+    assert "/clock" in acceptance_text
     assert "/odom" in acceptance_text
     assert "/g1/head_rgbd/points" in acceptance_text
-    assert "a08e9c8" in acceptance_text
+    assert "38cc08d" in acceptance_text
     assert "Ready for runtime verification" in acceptance_text
     assert "no ROS `PointCloud2` publisher was found" not in acceptance_text
     assert "rt/run_command/cmd" in acceptance_text
@@ -193,6 +197,9 @@ def test_g1_nav_usd_asset_layer_lives_in_package_assets():
     assert 'def Camera "head_d435_depth_camera"' in asset_text
     assert 'custom string rosTopic = "/g1/head_rgbd/points"' in asset_text
     assert 'custom string rosFrameId = "g1_head_d435_depth_optical_frame"' in asset_text
+    assert "xformOp:orient" in asset_text
+    assert "xformOp:scale" in asset_text
+    assert "xformOp:rotateXYZ" not in asset_text
 
 
 def test_g1_nav_asset_manifest_documents_carter_map_reuse():
