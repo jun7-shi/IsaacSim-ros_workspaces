@@ -14,6 +14,12 @@
 
 Every Linear issue created from this plan must end with at least one git commit that contains only the completed issue's scoped changes. If an issue requires multiple logical commits, keep each commit buildable and mention all commit hashes in the Linear issue completion note.
 
+## Environment and G1 Resource Policy
+
+- Use `/data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab/` as the source of truth for Unitree G1 simulation assets, policies, DDS command examples, and Isaac Lab integration details.
+- Launch Isaac Sim from the conda environment named `unitree_sim_lab`.
+- Do not install packages into any conda environment without explicit user approval. If a dependency is missing, stop and ask with the exact package and command needed.
+
 ## File Structure
 
 - Create `src/navigation/humanoid_navigation/package.xml`: ROS package metadata and dependencies.
