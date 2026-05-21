@@ -1,0 +1,30 @@
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      plugins: [rgbd_voxel_layer, inflation_layer]
+      rgbd_voxel_layer:
+        plugin: nav2_costmap_2d::VoxelLayer
+        enabled: true
+        publish_voxel_map: true
+        origin_z: 0.0
+        z_resolution: 0.1
+        z_voxels: 16
+        max_obstacle_height: 1.8
+        mark_threshold: 0
+        observation_sources: pointcloud
+        pointcloud:
+          topic: /g1/head_rgbd/points
+          data_type: PointCloud2
+          marking: true
+          clearing: true
+          obstacle_min_range: 0.05
+          obstacle_max_range: 4.0
+          raytrace_min_range: 0.05
+          raytrace_max_range: 5.0
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.8
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        enabled: true
+        cost_scaling_factor: 0.8
+        inflation_radius: 0.55

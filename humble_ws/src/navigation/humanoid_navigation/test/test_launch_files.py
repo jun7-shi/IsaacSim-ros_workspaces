@@ -41,3 +41,27 @@ def test_global_costmap_uses_static_map_layer():
     assert "static_layer" in global_params["plugins"]
     assert global_params["static_layer"]["plugin"] == "nav2_costmap_2d::StaticLayer"
     assert params["map_server"]["ros__parameters"]["topic_name"] == "map"
+
+
+def test_obstacle_2d_mode_uses_pointcloud_obstacle_layer():
+    params = load_yaml("params/perception_2d_obstacle.yaml")
+    local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
+    obstacle_layer = local_params["rgbd_obstacle_layer"]
+
+    assert "rgbd_obstacle_layer" in local_params["plugins"]
+    assert obstacle_layer["plugin"] == "nav2_costmap_2d::ObstacleLayer"
+    assert obstacle_layer["pointcloud"]["data_type"] == "PointCloud2"
+    assert obstacle_layer["pointcloud"]["marking"] is True
+    assert obstacle_layer["pointcloud"]["clearing"] is True
+
+
+def test_voxel_3d_mode_uses_voxel_layer():
+    params = load_yaml("params/perception_3d_voxel.yaml")
+    local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
+    voxel_layer = local_params["rgbd_voxel_layer"]
+
+    assert "rgbd_voxel_layer" in local_params["plugins"]
+    assert voxel_layer["plugin"] == "nav2_costmap_2d::VoxelLayer"
+    assert voxel_layer["pointcloud"]["data_type"] == "PointCloud2"
+    assert voxel_layer["pointcloud"]["marking"] is True
+    assert voxel_layer["pointcloud"]["clearing"] is True
