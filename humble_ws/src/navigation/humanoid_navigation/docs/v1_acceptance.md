@@ -27,6 +27,7 @@ conda run -n unitree_sim_lab python sim_main.py \
   --task Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav \
   --robot_type g129 \
   --enable_dex1_dds \
+  --enable_nav_ros_tf_odom \
   --no_render
 ```
 
@@ -75,6 +76,11 @@ The Unitree G1 simulation project has mobile Wholebody tasks. The relevant V1
 navigation task is `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav`, added in the
 Unitree worktree branch `hum-nav-g1-nav-task` at commit `b3da65c`.
 
+The same Unitree worktree adds a TF/odometry ROS2 Bridge graph at commit
+`a7f3f6c`. Enable it with `--enable_nav_ros_tf_odom`; it creates
+`map -> odom -> base_link` and publishes `/odom` through Isaac Sim's built-in
+`isaacsim.ros2.bridge`.
+
 The Unitree project registers the Wholebody command DDS object when the task
 contains `Wholebody` or `--enable_wholebody_dds` is set. Its subscriber listens
 on `rt/run_command/cmd`, which matches the adapter implemented in this package.
@@ -117,8 +123,8 @@ interfaces in the referenced Unitree IsaacLab project:
 | Check | Required by Nav2 V1 | Current Unitree project finding | Status |
 | --- | --- | --- | --- |
 | Static map | `map_server` loads `map:=...` | Navigation launch can reuse `src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml` for the first smoke acceptance | Ready for integration |
-| TF | `map -> odom -> base_link` | No ROS TF publisher was found in the Unitree project | Blocked |
-| Odometry | `/odom` | No ROS odometry publisher was found in the Unitree project | Blocked |
+| TF | `map -> odom -> base_link` | `--enable_nav_ros_tf_odom` creates a ROS2 Bridge graph for `map -> odom -> base_link`; live `tf2_echo` still needs a full sim run | Ready for runtime verification |
+| Odometry | `/odom` | `--enable_nav_ros_tf_odom` creates a ROS2 Bridge odometry publisher; live `ros2 topic hz /odom` still needs a full sim run | Ready for runtime verification |
 | RGBD costmap input | `/g1/head_rgbd/points` as `PointCloud2` | Camera pipeline currently exposes RGB image observations and shared-memory/image-server paths; no ROS `PointCloud2` publisher was found | Blocked |
 | Nav2 lifecycle | active Nav2 lifecycle nodes | Cannot validate without ROS TF, `/odom`, map alignment, and RGBD input | Blocked |
 | Local costmap updates | marking and clearing from RGBD `PointCloud2` | Costmap config is present, but there is no ROS point cloud input to drive it | Blocked |
@@ -137,14 +143,12 @@ path in this shell. No conda packages were installed or modified.
 
 ## Required Follow-up Work
 
-To unblock the real V1 acceptance run, the Isaac Sim side needs a ROS bridge
-layer that publishes the exact Nav2-facing contract:
+To unblock the real V1 acceptance run, the Isaac Sim side still needs the RGBD
+ROS bridge layer that publishes the exact Nav2-facing perception contract:
 
-1. `map -> odom -> base_link` TF.
-2. `/odom` as `nav_msgs/Odometry`.
-3. `/g1/head_rgbd/points` as `sensor_msgs/PointCloud2`, generated from the G1
+1. `/g1/head_rgbd/points` as `sensor_msgs/PointCloud2`, generated from the G1
    head RGBD camera.
-4. The first acceptance run can use the existing Carter warehouse occupancy map.
+2. The first acceptance run can use the existing Carter warehouse occupancy map.
    A G1-scene-aligned map remains a follow-up once navigation motion works.
 
 Once those interfaces exist, rerun the commands above and record:
