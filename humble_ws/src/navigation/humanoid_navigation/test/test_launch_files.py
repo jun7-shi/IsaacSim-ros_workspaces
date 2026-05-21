@@ -126,3 +126,29 @@ def test_main_launch_starts_nav2_and_g1_adapter():
     assert "bringup_launch.py" in launch_text
     assert "g1_cmd_vel_adapter" in launch_text
     assert "nav2_bringup" in launch_text
+
+
+def test_rviz_config_uses_map_fixed_frame_and_navigation_displays():
+    rviz_text = (PACKAGE_ROOT / "rviz" / "humanoid_navigation.rviz").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Fixed Frame: map" in rviz_text
+    assert "/map" in rviz_text
+    assert "/g1/head_rgbd/points" in rviz_text
+    assert "/local_costmap/costmap" in rviz_text
+    assert "/global_costmap/costmap" in rviz_text
+    assert "/plan" in rviz_text
+
+
+def test_readme_documents_static_map_launch_and_required_topics():
+    readme_text = (PACKAGE_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "robot_profile:=g1" in readme_text
+    assert "localization_mode:=sim_ground_truth" in readme_text
+    assert "perception_mode:=obstacle_2d" in readme_text
+    assert "map:=/absolute/path/to/map.yaml" in readme_text
+    assert "map -> odom -> base_link" in readme_text
+    assert "/odom" in readme_text
+    assert "/g1/head_rgbd/points" in readme_text
+    assert "/cmd_vel_smoothed" in readme_text
