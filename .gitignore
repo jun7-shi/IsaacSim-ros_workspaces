@@ -8,3 +8,4 @@ build_ws/jazzy
 build_ws/humble
 .vscode/
 .*.pyc
+.worktrees/
