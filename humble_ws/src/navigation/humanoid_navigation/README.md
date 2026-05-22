@@ -13,7 +13,7 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
   perception_mode:=static_only \
-  map:=/absolute/path/to/unitree_g1_nav_map.yaml
+  map:=/absolute/path/to/kitchen_g1_nav_map.yaml
 ```
 
 Generate the map from the Unitree IsaacLab env before HUM-36 acceptance:
@@ -23,9 +23,9 @@ cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
   --headless \
-  --task Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav \
+  --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
-  --export_nav_static_map /absolute/path/to/unitree_g1_nav_map.yaml
+  --export_nav_static_map /absolute/path/to/kitchen_g1_nav_map.yaml
 ```
 
 The package still carries `maps/g1_static_warehouse.yaml` as a launch/test
@@ -37,7 +37,8 @@ V1.5 RGBD 2D obstacle mode:
 ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
-  perception_mode:=obstacle_2d
+  perception_mode:=obstacle_2d \
+  map:=/absolute/path/to/kitchen_g1_nav_map.yaml
 ```
 
 V1.5 optional voxel mode:
@@ -46,7 +47,8 @@ V1.5 optional voxel mode:
 ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
-  perception_mode:=voxel_3d
+  perception_mode:=voxel_3d \
+  map:=/absolute/path/to/kitchen_g1_nav_map.yaml
 ```
 
 Optional RViz:
@@ -56,6 +58,7 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
   perception_mode:=static_only \
+  map:=/absolute/path/to/kitchen_g1_nav_map.yaml \
   rviz:=true
 ```
 
@@ -65,7 +68,7 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
 - Odometry: `/odom`
 - Smoothed Nav2 velocity output: `/cmd_vel_smoothed`
 - Nav2 static map generated from the active Unitree IsaacLab env and passed as
-  `map:=/absolute/path/to/unitree_g1_nav_map.yaml`
+  `map:=/absolute/path/to/kitchen_g1_nav_map.yaml`
 - Unitree DDS locomotion command receiver: `rt/run_command/cmd`
 
 V1.5 perception modes additionally require RGBD point cloud

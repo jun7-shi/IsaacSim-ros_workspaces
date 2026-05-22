@@ -43,6 +43,13 @@ def test_global_costmap_uses_static_map_layer():
     assert params["map_server"]["ros__parameters"]["topic_name"] == "map"
 
 
+def test_lifecycle_manager_activates_map_server_for_map_topic():
+    params = load_yaml("config/nav2_params.yaml")
+    lifecycle_nodes = params["lifecycle_manager"]["ros__parameters"]["node_names"]
+
+    assert "map_server" in lifecycle_nodes
+
+
 def test_obstacle_2d_mode_uses_pointcloud_obstacle_layer():
     params = load_yaml("params/perception_2d_obstacle.yaml")
     local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
@@ -159,7 +166,7 @@ def test_readme_documents_static_map_launch_and_required_topics():
     assert "localization_mode:=sim_ground_truth" in readme_text
     assert "perception_mode:=static_only" in readme_text
     assert "--export_nav_static_map" in readme_text
-    assert "unitree_g1_nav_map.yaml" in readme_text
+    assert "kitchen_g1_nav_map.yaml" in readme_text
     assert "map -> odom -> base_link" in readme_text
     assert "/odom" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
@@ -172,8 +179,8 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     )
 
     assert "conda run -n unitree_sim_lab" in acceptance_text
-    assert "Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav" in acceptance_text
-    assert "HUMANOID_NAVIGATION_G1_NAV_USD" in acceptance_text
+    assert "Isaac-Kitchen-G129-Dex1-Wholebody" in acceptance_text
+    assert "KitchenRoom.usd" in acceptance_text
     assert "--enable_nav_ros_clock" in acceptance_text
     assert "--enable_nav_ros_tf_odom" in acceptance_text
     assert "--enable_nav_ros_pointcloud" not in acceptance_text
@@ -182,7 +189,7 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "ros2 launch humanoid_navigation humanoid_navigation.launch.py" in acceptance_text
     assert "perception_mode:=static_only" in acceptance_text
     assert "--export_nav_static_map" in acceptance_text
-    assert "unitree_g1_nav_map.yaml" in acceptance_text
+    assert "kitchen_g1_nav_map.yaml" in acceptance_text
     assert "isaacsim.asset.gen.omap" in acceptance_text
     assert "OnPlaybackTick -> IsaacReadSimulationTime -> ROS2PublishClock" in acceptance_text
     assert "map -> odom -> base_link" in acceptance_text
@@ -213,11 +220,12 @@ def test_unitree_isaaclab_static_map_doc_explains_export_flow():
         PACKAGE_ROOT / "docs" / "unitree_isaaclab_static_map.md"
     ).read_text(encoding="utf-8")
 
-    assert "Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav" in doc_text
+    assert "Isaac-Kitchen-G129-Dex1-Wholebody" in doc_text
     assert "conda run -n unitree_sim_lab" in doc_text
     assert "--export_nav_static_map" in doc_text
-    assert "unitree_g1_nav_map.yaml" in doc_text
+    assert "kitchen_g1_nav_map.yaml" in doc_text
     assert "isaacsim.asset.gen.omap" in doc_text
+    assert "UsdPhysics.CollisionAPI" in doc_text
     assert "/World/envs/env_0/Robot" in doc_text
     assert "/World/envs/env_0/Object" in doc_text
 

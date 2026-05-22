@@ -25,10 +25,9 @@ Start the G1 Wholebody Isaac Sim scene from the Unitree navigation worktree:
 
 ```bash
 cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
-export HUMANOID_NAVIGATION_G1_NAV_USD=/data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/assets/g1_nav/g1_29dof_with_dex1_nav_depth.usd
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
-  --task Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav \
+  --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
   --enable_dex1_dds \
   --enable_nav_ros_clock \
@@ -47,7 +46,7 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
   perception_mode:=static_only \
-  map:=/data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/maps/unitree_g1_nav_map.yaml
+  map:=/data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/maps/kitchen_g1_nav_map.yaml
 ```
 
 Generate that map from the Unitree IsaacLab env before running Nav2:
@@ -57,22 +56,23 @@ cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
   --headless \
-  --task Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav \
+  --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
-  --export_nav_static_map /data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/maps/unitree_g1_nav_map.yaml
+  --export_nav_static_map /data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/maps/kitchen_g1_nav_map.yaml
 ```
 
 The exporter uses NVIDIA's Isaac Sim occupancy map API
 `isaacsim.asset.gen.omap` against the live `/World/envs/env_0` stage. It
-temporarily deactivates the robot and task object while exporting:
+temporarily deactivates the robot, and also deactivates the task object if that
+prim exists:
 
 ```text
 /World/envs/env_0/Robot
 /World/envs/env_0/Object
 ```
 
-That prevents the G1 and the movable cylinder from being baked into the static
-map.
+That prevents the G1, and any movable task object in other scenes, from being
+baked into the static map.
 
 Expected acceptance checks:
 
@@ -106,7 +106,7 @@ unitree_sdk2py True
 ```
 
 The Unitree G1 simulation project has mobile Wholebody tasks. The relevant V1.0
-navigation task is `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav` in the Unitree
+navigation task is `Isaac-Kitchen-G129-Dex1-Wholebody` in the Unitree
 worktree branch `hum-nav-g1-nav-task`.
 
 The current Unitree-side ROS bridge fixes are:
@@ -150,19 +150,8 @@ The Unitree project registers the Wholebody command DDS object when the task
 contains `Wholebody` or `--enable_wholebody_dds` is set. Its subscriber listens
 on `rt/run_command/cmd`, which matches the adapter implemented in this package.
 
-This package owns the navigation-specific G1 USD layer:
-
-```text
-src/navigation/humanoid_navigation/assets/g1_nav/g1_29dof_with_dex1_nav_depth.usd
-```
-
-The layer references the original Unitree `g1-29dof_wholebody_dex1` robot asset
-and adds a D435-style depth camera under `d435_link` for later V1.5 work.
-Unitree source assets are not overwritten. The matching manifest is:
-
-```text
-src/navigation/humanoid_navigation/assets/g1_nav/manifest.yaml
-```
+The Kitchen task loads `/data/jun7.shi/datasets/Lightwheel_Kitchen/Collected_KitchenRoom/KitchenRoom.usd`
+through the Unitree IsaacLab task `Isaac-Kitchen-G129-Dex1-Wholebody`.
 
 ## Blocked Acceptance Items
 
@@ -176,13 +165,13 @@ checks from a clean ROS shell or unset `LD_LIBRARY_PATH` before sourcing
 
 | Check | Required by V1.0 | Current finding | Status |
 | --- | --- | --- | --- |
-| Static map | `map_server` loads a Unitree-env map | Generate `unitree_g1_nav_map.yaml` from `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav` using `--export_nav_static_map` | Ready for runtime generation |
+| Static map | `map_server` loads a Unitree-env map | Generate `kitchen_g1_nav_map.yaml` from `Isaac-Kitchen-G129-Dex1-Wholebody` using `--export_nav_static_map` | Ready for runtime generation |
 | Sim time | `/clock` | `--enable_nav_ros_clock` creates an official-style ROS2 Bridge clock graph | Ready for runtime verification |
 | TF | `map -> odom -> base_link` | `--enable_nav_ros_tf_odom` creates the TF chain and initializes `map -> odom` from the G1 start pose | Ready for runtime verification |
 | Odometry | `/odom` | `--enable_nav_ros_tf_odom` creates the odometry publisher | Ready for runtime verification |
 | Nav2 lifecycle | active Nav2 lifecycle nodes | Requires a full Isaac Sim plus Nav2 launch | Blocked on live acceptance |
 | G1 velocity command | DDS `rt/run_command/cmd` | DDS topic exists and matches the adapter | Ready for integration |
-| G1 nav task | Unitree IsaacLab task loads the package-owned G1 nav USD | `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav` is registered in the Unitree worktree | Ready for integration |
+| G1 nav task | Unitree IsaacLab Kitchen scene with G1 Wholebody | `Isaac-Kitchen-G129-Dex1-Wholebody` is registered in the Unitree worktree | Ready for integration |
 
 ## Required Follow-up Work
 
