@@ -20,7 +20,7 @@ def generate_launch_description():
             DeclareLaunchArgument("robot_profile", default_value="g1"),
             DeclareLaunchArgument("map", default_value=""),
             DeclareLaunchArgument("params_file", default_value=""),
-            DeclareLaunchArgument("perception_mode", default_value="obstacle_2d"),
+            DeclareLaunchArgument("perception_mode", default_value="static_only"),
             DeclareLaunchArgument("localization_mode", default_value="sim_ground_truth"),
             DeclareLaunchArgument("use_sim_time", default_value="true"),
             DeclareLaunchArgument("rviz", default_value="false"),
@@ -48,10 +48,12 @@ def _launch_setup(context):
         profile=profile,
     )
 
+    map_file = _map_file(package_dir, context)
+
     nav2_bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(nav2_launch_dir, "bringup_launch.py")),
         launch_arguments={
-            "map": LaunchConfiguration("map"),
+            "map": map_file,
             "use_sim_time": LaunchConfiguration("use_sim_time"),
             "params_file": merged_params,
         }.items(),
@@ -81,8 +83,16 @@ def _default_params_file(package_dir, context):
     return os.path.join(package_dir, "config", "nav2_params.yaml")
 
 
+def _map_file(package_dir, context):
+    map_file = LaunchConfiguration("map").perform(context)
+    if map_file:
+        return map_file
+    return os.path.join(package_dir, "maps", "g1_static_warehouse.yaml")
+
+
 def _perception_params_file(package_dir, perception_mode):
     perception_files = {
+        "static_only": "perception_static_only.yaml",
         "obstacle_2d": "perception_2d_obstacle.yaml",
         "voxel_3d": "perception_3d_voxel.yaml",
     }

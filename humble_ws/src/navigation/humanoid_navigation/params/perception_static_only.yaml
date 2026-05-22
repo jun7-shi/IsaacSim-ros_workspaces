@@ -1,0 +1,9 @@
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      plugins: [inflation_layer]
+      inflation_layer:
+        plugin: nav2_costmap_2d::InflationLayer
+        enabled: true
+        cost_scaling_factor: 0.8
+        inflation_radius: 0.55

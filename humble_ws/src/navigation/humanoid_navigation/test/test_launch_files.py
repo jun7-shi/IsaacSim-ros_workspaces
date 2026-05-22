@@ -55,6 +55,15 @@ def test_obstacle_2d_mode_uses_pointcloud_obstacle_layer():
     assert obstacle_layer["pointcloud"]["clearing"] is True
 
 
+def test_static_only_mode_uses_no_sensor_obstacle_layer():
+    params = load_yaml("params/perception_static_only.yaml")
+    local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
+
+    assert local_params["plugins"] == ["inflation_layer"]
+    assert "rgbd_obstacle_layer" not in local_params
+    assert "rgbd_voxel_layer" not in local_params
+
+
 def test_voxel_3d_mode_uses_voxel_layer():
     params = load_yaml("params/perception_3d_voxel.yaml")
     local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
@@ -107,15 +116,16 @@ def test_main_launch_file_declares_required_mode_arguments():
         assert f'DeclareLaunchArgument("{argument}"' in launch_text
 
 
-def test_main_launch_defaults_to_g1_obstacle_2d_and_sim_ground_truth():
+def test_main_launch_defaults_to_g1_static_only_and_sim_ground_truth():
     launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
         encoding="utf-8"
     )
 
     assert 'default_value="g1"' in launch_text
-    assert 'default_value="obstacle_2d"' in launch_text
+    assert 'default_value="static_only"' in launch_text
     assert 'default_value="sim_ground_truth"' in launch_text
     assert 'default_value="true"' in launch_text
+    assert "g1_static_warehouse.yaml" in launch_text
 
 
 def test_main_launch_starts_nav2_and_g1_adapter():
@@ -146,8 +156,8 @@ def test_readme_documents_static_map_launch_and_required_topics():
 
     assert "robot_profile:=g1" in readme_text
     assert "localization_mode:=sim_ground_truth" in readme_text
-    assert "perception_mode:=obstacle_2d" in readme_text
-    assert "map:=/absolute/path/to/map.yaml" in readme_text
+    assert "perception_mode:=static_only" in readme_text
+    assert "g1_static_warehouse.yaml" in readme_text
     assert "map -> odom -> base_link" in readme_text
     assert "/odom" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
@@ -164,23 +174,34 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "HUMANOID_NAVIGATION_G1_NAV_USD" in acceptance_text
     assert "--enable_nav_ros_clock" in acceptance_text
     assert "--enable_nav_ros_tf_odom" in acceptance_text
-    assert "--enable_nav_ros_pointcloud" in acceptance_text
+    assert "--enable_nav_ros_pointcloud" not in acceptance_text
     assert "--headless" in acceptance_text
     assert "  --no_render" not in acceptance_text
     assert "ros2 launch humanoid_navigation humanoid_navigation.launch.py" in acceptance_text
-    assert "src/navigation/carter_navigation/maps/carter_warehouse_navigation.yaml" in acceptance_text
+    assert "perception_mode:=static_only" in acceptance_text
+    assert "g1_static_warehouse.yaml" in acceptance_text
     assert "OnPlaybackTick -> IsaacReadSimulationTime -> ROS2PublishClock" in acceptance_text
-    assert "OgnIsaacRunOneSimulationFrame" in acceptance_text
     assert "map -> odom -> base_link" in acceptance_text
     assert "/clock" in acceptance_text
     assert "/odom" in acceptance_text
-    assert "/g1/head_rgbd/points" in acceptance_text
-    assert "38cc08d" in acceptance_text
+    assert "/g1/head_rgbd/points" not in acceptance_text
+    assert "5a09d46" in acceptance_text
     assert "Ready for runtime verification" in acceptance_text
     assert "no ROS `PointCloud2` publisher was found" not in acceptance_text
     assert "rt/run_command/cmd" in acceptance_text
     assert "blocked" in acceptance_text.lower()
-    assert "PointCloud2" in acceptance_text
+    assert "PointCloud2" not in acceptance_text
+
+
+def test_default_static_map_is_packaged_for_humanoid_navigation():
+    map_yaml = load_yaml("maps/g1_static_warehouse.yaml")
+    map_image = PACKAGE_ROOT / "maps" / map_yaml["image"]
+
+    assert map_yaml["image"] == "g1_static_warehouse.png"
+    assert map_yaml["resolution"] == 0.05
+    assert map_yaml["origin"] == [-11.975, -17.975, 0.0]
+    assert map_yaml["occupied_thresh"] == 0.65
+    assert map_image.exists()
 
 
 def test_g1_nav_usd_asset_layer_lives_in_package_assets():
@@ -208,8 +229,8 @@ def test_g1_nav_asset_manifest_documents_carter_map_reuse():
     assert manifest["asset"] == "g1_29dof_with_dex1_nav_depth.usd"
     assert manifest["mount_link"] == "d435_link"
     assert manifest["pointcloud_topic"] == "/g1/head_rgbd/points"
-    assert manifest["default_map_package"] == "carter_navigation"
-    assert manifest["default_map"] == "maps/carter_warehouse_navigation.yaml"
+    assert manifest["default_map_package"] == "humanoid_navigation"
+    assert manifest["default_map"] == "maps/g1_static_warehouse.yaml"
 
 
 def test_v2_backlog_defines_slam_localization_path():

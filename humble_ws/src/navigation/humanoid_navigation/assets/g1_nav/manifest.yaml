@@ -7,8 +7,8 @@ pointcloud_topic: /g1/head_rgbd/points
 depth_topic: /g1/head_rgbd/depth
 rgb_topic: /g1/head_rgbd/rgb
 camera_info_topic: /g1/head_rgbd/camera_info
-default_map_package: carter_navigation
-default_map: maps/carter_warehouse_navigation.yaml
+default_map_package: humanoid_navigation
+default_map: maps/g1_static_warehouse.yaml
 notes:
   - This package owns the navigation-specific USD layer.
   - Unitree source robot assets remain unmodified.
