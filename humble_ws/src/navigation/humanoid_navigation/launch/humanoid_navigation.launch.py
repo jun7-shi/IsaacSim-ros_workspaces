@@ -87,7 +87,11 @@ def _map_file(package_dir, context):
     map_file = LaunchConfiguration("map").perform(context)
     if map_file:
         return map_file
-    return os.path.join(package_dir, "maps", "g1_static_warehouse.yaml")
+    raise RuntimeError(
+        "map launch argument is required. Generate a map from the Unitree "
+        "IsaacLab env with sim_main.py --export_nav_static_map, then pass "
+        "map:=/absolute/path/to/generated.yaml."
+    )
 
 
 def _perception_params_file(package_dir, perception_mode):

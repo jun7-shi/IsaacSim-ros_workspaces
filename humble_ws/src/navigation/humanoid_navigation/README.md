@@ -12,24 +12,24 @@ source install/setup.bash
 ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
-  perception_mode:=static_only
+  perception_mode:=static_only \
+  map:=/absolute/path/to/unitree_g1_nav_map.yaml
 ```
 
-If `map:=...` is omitted, the launch file uses the package-owned default map:
-
-```text
-share/humanoid_navigation/maps/g1_static_warehouse.yaml
-```
-
-An explicit static map is still accepted:
+Generate the map from the Unitree IsaacLab env before HUM-36 acceptance:
 
 ```bash
-ros2 launch humanoid_navigation humanoid_navigation.launch.py \
-  robot_profile:=g1 \
-  localization_mode:=sim_ground_truth \
-  perception_mode:=static_only \
-  map:=/absolute/path/to/map.yaml
+cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
+conda run -n unitree_sim_lab python sim_main.py \
+  --device cuda:0 \
+  --headless \
+  --task Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav \
+  --robot_type g129 \
+  --export_nav_static_map /absolute/path/to/unitree_g1_nav_map.yaml
 ```
+
+The package still carries `maps/g1_static_warehouse.yaml` as a launch/test
+example, but it is not valid for the Unitree IsaacLab acceptance scene.
 
 V1.5 RGBD 2D obstacle mode:
 
@@ -64,8 +64,8 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
 - TF: `map -> odom -> base_link`
 - Odometry: `/odom`
 - Smoothed Nav2 velocity output: `/cmd_vel_smoothed`
-- Nav2 static map: `g1_static_warehouse.yaml` plus image file, or an explicit
-  `map:=/absolute/path/to/map.yaml`
+- Nav2 static map generated from the active Unitree IsaacLab env and passed as
+  `map:=/absolute/path/to/unitree_g1_nav_map.yaml`
 - Unitree DDS locomotion command receiver: `rt/run_command/cmd`
 
 V1.5 perception modes additionally require RGBD point cloud

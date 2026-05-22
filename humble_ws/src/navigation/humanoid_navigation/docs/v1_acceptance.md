@@ -46,25 +46,33 @@ source install/setup.bash
 ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   robot_profile:=g1 \
   localization_mode:=sim_ground_truth \
-  perception_mode:=static_only
+  perception_mode:=static_only \
+  map:=/data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/maps/unitree_g1_nav_map.yaml
 ```
 
-The default map is installed with this package:
+Generate that map from the Unitree IsaacLab env before running Nav2:
+
+```bash
+cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
+conda run -n unitree_sim_lab python sim_main.py \
+  --device cuda:0 \
+  --headless \
+  --task Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav \
+  --robot_type g129 \
+  --export_nav_static_map /data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/maps/unitree_g1_nav_map.yaml
+```
+
+The exporter uses NVIDIA's Isaac Sim occupancy map API
+`isaacsim.asset.gen.omap` against the live `/World/envs/env_0` stage. It
+temporarily deactivates the robot and task object while exporting:
 
 ```text
-share/humanoid_navigation/maps/g1_static_warehouse.yaml
+/World/envs/env_0/Robot
+/World/envs/env_0/Object
 ```
 
-The map is copied from the existing Carter warehouse map for the first smoke
-acceptance path:
-
-```text
-image: g1_static_warehouse.png
-resolution: 0.05
-origin: [-11.975, -17.975, 0.0]
-occupied_thresh: 0.65
-free_thresh: 0.196
-```
+That prevents the G1 and the movable cylinder from being baked into the static
+map.
 
 Expected acceptance checks:
 
@@ -168,7 +176,7 @@ checks from a clean ROS shell or unset `LD_LIBRARY_PATH` before sourcing
 
 | Check | Required by V1.0 | Current finding | Status |
 | --- | --- | --- | --- |
-| Static map | `map_server` loads package default map | `humanoid_navigation/maps/g1_static_warehouse.yaml` is packaged for the first smoke acceptance | Ready for runtime verification |
+| Static map | `map_server` loads a Unitree-env map | Generate `unitree_g1_nav_map.yaml` from `Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav` using `--export_nav_static_map` | Ready for runtime generation |
 | Sim time | `/clock` | `--enable_nav_ros_clock` creates an official-style ROS2 Bridge clock graph | Ready for runtime verification |
 | TF | `map -> odom -> base_link` | `--enable_nav_ros_tf_odom` creates the TF chain and initializes `map -> odom` from the G1 start pose | Ready for runtime verification |
 | Odometry | `/odom` | `--enable_nav_ros_tf_odom` creates the odometry publisher | Ready for runtime verification |

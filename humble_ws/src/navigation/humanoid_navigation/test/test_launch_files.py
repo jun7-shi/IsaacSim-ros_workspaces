@@ -125,7 +125,8 @@ def test_main_launch_defaults_to_g1_static_only_and_sim_ground_truth():
     assert 'default_value="static_only"' in launch_text
     assert 'default_value="sim_ground_truth"' in launch_text
     assert 'default_value="true"' in launch_text
-    assert "g1_static_warehouse.yaml" in launch_text
+    assert "--export_nav_static_map" in launch_text
+    assert "map launch argument is required" in launch_text
 
 
 def test_main_launch_starts_nav2_and_g1_adapter():
@@ -157,7 +158,8 @@ def test_readme_documents_static_map_launch_and_required_topics():
     assert "robot_profile:=g1" in readme_text
     assert "localization_mode:=sim_ground_truth" in readme_text
     assert "perception_mode:=static_only" in readme_text
-    assert "g1_static_warehouse.yaml" in readme_text
+    assert "--export_nav_static_map" in readme_text
+    assert "unitree_g1_nav_map.yaml" in readme_text
     assert "map -> odom -> base_link" in readme_text
     assert "/odom" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
@@ -179,7 +181,9 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "  --no_render" not in acceptance_text
     assert "ros2 launch humanoid_navigation humanoid_navigation.launch.py" in acceptance_text
     assert "perception_mode:=static_only" in acceptance_text
-    assert "g1_static_warehouse.yaml" in acceptance_text
+    assert "--export_nav_static_map" in acceptance_text
+    assert "unitree_g1_nav_map.yaml" in acceptance_text
+    assert "isaacsim.asset.gen.omap" in acceptance_text
     assert "OnPlaybackTick -> IsaacReadSimulationTime -> ROS2PublishClock" in acceptance_text
     assert "map -> odom -> base_link" in acceptance_text
     assert "/clock" in acceptance_text
@@ -202,6 +206,20 @@ def test_default_static_map_is_packaged_for_humanoid_navigation():
     assert map_yaml["origin"] == [-11.975, -17.975, 0.0]
     assert map_yaml["occupied_thresh"] == 0.65
     assert map_image.exists()
+
+
+def test_unitree_isaaclab_static_map_doc_explains_export_flow():
+    doc_text = (
+        PACKAGE_ROOT / "docs" / "unitree_isaaclab_static_map.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Isaac-Move-Cylinder-G129-Dex1-Wholebody-Nav" in doc_text
+    assert "conda run -n unitree_sim_lab" in doc_text
+    assert "--export_nav_static_map" in doc_text
+    assert "unitree_g1_nav_map.yaml" in doc_text
+    assert "isaacsim.asset.gen.omap" in doc_text
+    assert "/World/envs/env_0/Robot" in doc_text
+    assert "/World/envs/env_0/Object" in doc_text
 
 
 def test_g1_nav_usd_asset_layer_lives_in_package_assets():
