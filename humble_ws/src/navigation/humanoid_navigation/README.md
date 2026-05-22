@@ -23,6 +23,7 @@ cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
   --headless \
+  --enable_cameras \
   --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
   --export_nav_static_map /absolute/path/to/kitchen_g1_nav_map.yaml

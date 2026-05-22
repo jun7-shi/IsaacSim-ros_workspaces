@@ -56,15 +56,20 @@ cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
   --headless \
+  --enable_cameras \
   --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
   --export_nav_static_map /data/jun7.shi/code/poc/IsaacSim-ros_workspaces/.worktrees/nav2-humanoid-navigation/humble_ws/src/navigation/humanoid_navigation/maps/kitchen_g1_nav_map.yaml
 ```
 
 The exporter uses NVIDIA's Isaac Sim occupancy map API
-`isaacsim.asset.gen.omap` against the live `/World/envs/env_0` stage. It
-temporarily deactivates the robot, and also deactivates the task object if that
-prim exists:
+`isaacsim.asset.gen.omap` against the live Kitchen task stage. For
+`Isaac-Kitchen-G129-Dex1-Wholebody`, the exporter automatically bounds the map
+to `/World/envs/env_0/Kitchen` and does not deactivate `/World/envs/env_0/Robot`
+because the task camera sensors live under that prim.
+
+For non-Kitchen exports, it still deactivates the robot and task object if
+those prims exist:
 
 ```text
 /World/envs/env_0/Robot
@@ -72,7 +77,7 @@ prim exists:
 ```
 
 That prevents the G1, and any movable task object in other scenes, from being
-baked into the static map.
+baked into a static map.
 
 Expected acceptance checks:
 
