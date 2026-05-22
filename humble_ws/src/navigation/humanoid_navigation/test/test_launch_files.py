@@ -50,6 +50,14 @@ def test_lifecycle_manager_activates_map_server_for_map_topic():
     assert "map_server" in lifecycle_nodes
 
 
+def test_behavior_server_provides_default_nav2_recovery_actions():
+    params = load_yaml("config/nav2_params.yaml")
+    behavior_params = params["behavior_server"]["ros__parameters"]
+
+    assert "backup" in behavior_params["behavior_plugins"]
+    assert behavior_params["backup"]["plugin"] == "nav2_behaviors/BackUp"
+
+
 def test_obstacle_2d_mode_uses_pointcloud_obstacle_layer():
     params = load_yaml("params/perception_2d_obstacle.yaml")
     local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
