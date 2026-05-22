@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import socket
 from dataclasses import dataclass
 
 from geometry_msgs.msg import Twist
@@ -85,6 +87,31 @@ class UnitreeDdsPublisher:
         self._publisher.Write(self._msg_type(data=payload))
 
 
+class UdpCommandPublisher:
+    def __init__(self, host: str, port: int):
+        self._address = (host, int(port))
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    def publish(self, payload: str) -> None:
+        packet = json.dumps({"payload": payload}).encode("utf-8")
+        self._socket.sendto(packet, self._address)
+
+
+def create_command_publisher(
+    transport: str,
+    *,
+    dds_topic: str,
+    udp_host: str,
+    udp_port: int,
+):
+    normalized_transport = transport.lower()
+    if normalized_transport == "udp":
+        return UdpCommandPublisher(host=udp_host, port=udp_port)
+    if normalized_transport == "dds":
+        return UnitreeDdsPublisher(topic=dds_topic)
+    raise ValueError(f"unsupported G1 command transport: {transport}")
+
+
 def create_g1_cmd_vel_adapter_class(node_base_cls):
     class G1CmdVelAdapter(node_base_cls):
         def __init__(self):
@@ -106,7 +133,12 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
                 converter=self._converter,
                 timeout_sec=self.get_parameter("cmd_timeout_sec").value,
             )
-            self._dds = UnitreeDdsPublisher(self.get_parameter("dds_topic").value)
+            self._publisher = create_command_publisher(
+                self.get_parameter("transport").value,
+                dds_topic=self.get_parameter("dds_topic").value,
+                udp_host=self.get_parameter("udp_host").value,
+                udp_port=self.get_parameter("udp_port").value,
+            )
 
             self.create_subscription(
                 Twist,
@@ -121,7 +153,10 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
 
         def _declare_parameters(self) -> None:
             self.declare_parameter("input_cmd_vel_topic", "/cmd_vel_smoothed")
+            self.declare_parameter("transport", "udp")
             self.declare_parameter("dds_topic", "rt/run_command/cmd")
+            self.declare_parameter("udp_host", "127.0.0.1")
+            self.declare_parameter("udp_port", 18080)
             self.declare_parameter("publish_rate_hz", 50.0)
             self.declare_parameter("cmd_timeout_sec", 0.25)
             self.declare_parameter("default_height", 0.8)
@@ -138,7 +173,7 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
 
         def _publish_tick(self) -> None:
             command = self._state.command_at(self._now_sec())
-            self._dds.publish(self._converter.to_payload(command))
+            self._publisher.publish(self._converter.to_payload(command))
 
         def _now_sec(self) -> float:
             return self.get_clock().now().nanoseconds / 1e9
@@ -148,6 +183,7 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
 
 def main(args=None):
     import rclpy
+    from rclpy.executors import ExternalShutdownException
     from rclpy.node import Node
 
     rclpy.init(args=args)
@@ -155,6 +191,9 @@ def main(args=None):
     node = node_cls()
     try:
         rclpy.spin(node)
+    except (KeyboardInterrupt, ExternalShutdownException):
+        pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()

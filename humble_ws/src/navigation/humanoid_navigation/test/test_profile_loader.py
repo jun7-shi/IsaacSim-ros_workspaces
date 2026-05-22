@@ -15,6 +15,9 @@ def test_load_g1_profile_has_required_navigation_contract():
     assert profile["frames"]["base"] == "base_link"
     assert profile["perception"]["pointcloud_topic"]
     assert profile["dds"]["topic"] == "rt/run_command/cmd"
+    assert profile["dds"]["transport"] == "udp"
+    assert profile["dds"]["udp_host"] == "127.0.0.1"
+    assert profile["dds"]["udp_port"] == 18080
     assert profile["dds"]["default_height"] == 0.8
     assert profile["motion"]["enable_lateral"] is False
 

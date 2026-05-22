@@ -14,7 +14,7 @@ Validate the V1.0 Nav2 chain for Unitree G1 in Isaac Sim:
 3. Launch `humanoid_navigation` with a static map, `sim_ground_truth`
    localization, and `perception_mode:=static_only`.
 4. Send a short Nav2 goal and verify the G1 policy command path receives
-   velocity commands.
+   velocity commands through the Unitree sim UDP command bridge.
 
 Depth-based obstacle updates are deferred to V1.5. V1.0 is expected to navigate
 only in a known static map.
@@ -27,11 +27,13 @@ Start the G1 Wholebody Isaac Sim scene from the Unitree navigation worktree:
 cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
+  --enable_cameras \
   --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
   --enable_dex1_dds \
   --enable_nav_ros_clock \
-  --enable_nav_ros_tf_odom
+  --enable_nav_ros_tf_odom \
+  --enable_nav_udp_cmd_bridge
 ```
 
 For an automated run without the Isaac Sim GUI, append `--headless`.
@@ -152,8 +154,13 @@ ros2 run tf2_ros tf2_echo map base_link
 to view the robot pose in the global map frame.
 
 The Unitree project registers the Wholebody command DDS object when the task
-contains `Wholebody` or `--enable_wholebody_dds` is set. Its subscriber listens
-on `rt/run_command/cmd`, which matches the adapter implemented in this package.
+contains `Wholebody` or `--enable_wholebody_dds` is set. For V1, ROS does not
+publish Unitree DDS directly. `g1_cmd_vel_adapter` sends JSON UDP packets to
+`127.0.0.1:18080`, and `--enable_nav_udp_cmd_bridge` in the Unitree sim process
+writes those commands with `RunCommandDDS.write_run_command()`. The existing
+Unitree Wholebody action provider consumes the same `[x, y, yaw, height]`
+command shape. DDS `rt/run_command/cmd` remains available as an optional legacy
+transport for later integration work.
 
 The Kitchen task loads `/data/jun7.shi/datasets/Lightwheel_Kitchen/Collected_KitchenRoom/KitchenRoom.usd`
 through the Unitree IsaacLab task `Isaac-Kitchen-G129-Dex1-Wholebody`.
@@ -175,7 +182,7 @@ checks from a clean ROS shell or unset `LD_LIBRARY_PATH` before sourcing
 | TF | `map -> odom -> base_link` | `--enable_nav_ros_tf_odom` creates the TF chain and initializes `map -> odom` from the G1 start pose | Ready for runtime verification |
 | Odometry | `/odom` | `--enable_nav_ros_tf_odom` creates the odometry publisher | Ready for runtime verification |
 | Nav2 lifecycle | active Nav2 lifecycle nodes | Requires a full Isaac Sim plus Nav2 launch | Blocked on live acceptance |
-| G1 velocity command | DDS `rt/run_command/cmd` | DDS topic exists and matches the adapter | Ready for integration |
+| G1 velocity command | UDP `127.0.0.1:18080` into Unitree sim run command memory | ROS adapter no longer imports Unitree SDK; Unitree sim receives commands with `--enable_nav_udp_cmd_bridge` | Ready for integration |
 | G1 nav task | Unitree IsaacLab Kitchen scene with G1 Wholebody | `Isaac-Kitchen-G129-Dex1-Wholebody` is registered in the Unitree worktree | Ready for integration |
 
 ## Required Follow-up Work
@@ -187,7 +194,8 @@ For the live V1.0 acceptance run, record:
 3. Topic rates for `/clock` and `/odom`.
 4. RViz evidence that the static map, footprint, global plan, and local
    costmap render correctly.
-5. DDS observation that `/cmd_vel_smoothed` reaches `rt/run_command/cmd`.
+5. Observation that `/cmd_vel_smoothed` reaches the Unitree sim UDP bridge and
+   updates the Wholebody run command path.
 
 V1.5 then enables the head depth bridge and validates local costmap marking and
 clearing against runtime obstacles.

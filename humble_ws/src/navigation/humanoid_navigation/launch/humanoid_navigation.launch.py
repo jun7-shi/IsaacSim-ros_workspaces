@@ -197,7 +197,10 @@ def _adapter_parameters(profile):
     dds = profile["dds"]
     return {
         "input_cmd_vel_topic": profile["topics"]["cmd_vel"],
+        "transport": dds.get("transport", "udp"),
         "dds_topic": dds["topic"],
+        "udp_host": dds.get("udp_host", "127.0.0.1"),
+        "udp_port": int(dds.get("udp_port", 18080)),
         "publish_rate_hz": dds["publish_rate_hz"],
         "cmd_timeout_sec": dds["cmd_timeout_sec"],
         "default_height": dds["default_height"],

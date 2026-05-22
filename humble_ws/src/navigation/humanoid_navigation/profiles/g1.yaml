@@ -30,7 +30,10 @@ footprint:
   padding: 0.08
 
 dds:
+  transport: udp
   topic: rt/run_command/cmd
+  udp_host: 127.0.0.1
+  udp_port: 18080
   default_height: 0.8
   invert_y: true
   invert_yaw: true

@@ -1,9 +1,15 @@
+import json
+import socket
+import sys
+import types
+
 from geometry_msgs.msg import Twist
 
 from humanoid_navigation.g1_cmd_vel_adapter import (
     AdapterConfig,
     CommandConverter,
     CommandState,
+    UdpCommandPublisher,
 )
 
 
@@ -76,3 +82,72 @@ def test_command_state_returns_latest_command_before_timeout():
     command = state.command_at(now_sec=10.1)
 
     assert command == [0.2, 0.0, 0.0, 0.8]
+
+
+def test_udp_command_publisher_sends_json_payload_without_unitree_sdk():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(("127.0.0.1", 0))
+    sock.settimeout(1.0)
+    host, port = sock.getsockname()
+
+    publisher = UdpCommandPublisher(host=host, port=port)
+    publisher.publish("[0.1, 0.0, -0.2, 0.8]")
+
+    data, _addr = sock.recvfrom(2048)
+    sock.close()
+
+    assert json.loads(data.decode("utf-8")) == {
+        "payload": "[0.1, 0.0, -0.2, 0.8]"
+    }
+
+
+def test_main_ignores_external_shutdown_without_double_shutdown(monkeypatch):
+    from humanoid_navigation.g1_cmd_vel_adapter import main
+
+    class ExternalShutdownException(Exception):
+        pass
+
+    destroyed = []
+    shutdown_calls = []
+
+    class FakeNode:
+        def __init__(self, _name):
+            self._parameters = {}
+
+        def declare_parameter(self, name, default_value):
+            self._parameters[name] = default_value
+
+        def get_parameter(self, name):
+            return types.SimpleNamespace(value=self._parameters[name])
+
+        def create_subscription(self, *_args):
+            return None
+
+        def create_timer(self, *_args):
+            return None
+
+        def destroy_node(self):
+            destroyed.append(True)
+
+    rclpy_module = types.ModuleType("rclpy")
+    rclpy_module.init = lambda args=None: None
+    rclpy_module.spin = lambda _node: (_ for _ in ()).throw(
+        ExternalShutdownException()
+    )
+    rclpy_module.ok = lambda: False
+    rclpy_module.shutdown = lambda: shutdown_calls.append(True)
+
+    rclpy_node_module = types.ModuleType("rclpy.node")
+    rclpy_node_module.Node = FakeNode
+
+    rclpy_executors_module = types.ModuleType("rclpy.executors")
+    rclpy_executors_module.ExternalShutdownException = ExternalShutdownException
+
+    monkeypatch.setitem(sys.modules, "rclpy", rclpy_module)
+    monkeypatch.setitem(sys.modules, "rclpy.node", rclpy_node_module)
+    monkeypatch.setitem(sys.modules, "rclpy.executors", rclpy_executors_module)
+
+    main()
+
+    assert destroyed == [True]
+    assert shutdown_calls == []

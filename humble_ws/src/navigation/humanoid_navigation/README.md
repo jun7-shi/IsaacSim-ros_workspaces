@@ -16,6 +16,25 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   map:=/absolute/path/to/kitchen_g1_nav_map.yaml
 ```
 
+The ROS adapter sends G1 policy commands to Unitree IsaacLab over UDP by
+default, so the ROS Humble environment does not need `unitree_sdk2py`.
+Start the Unitree sim scene with `--enable_nav_udp_cmd_bridge` so the sim
+process can receive those packets in the `unitree_sim_lab` environment and
+write the existing Wholebody run command channel.
+
+```bash
+cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
+conda run -n unitree_sim_lab python sim_main.py \
+  --device cuda:0 \
+  --enable_cameras \
+  --task Isaac-Kitchen-G129-Dex1-Wholebody \
+  --robot_type g129 \
+  --enable_dex1_dds \
+  --enable_nav_ros_clock \
+  --enable_nav_ros_tf_odom \
+  --enable_nav_udp_cmd_bridge
+```
+
 Generate the map from the Unitree IsaacLab env before HUM-36 acceptance:
 
 ```bash
@@ -70,7 +89,9 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
 - Smoothed Nav2 velocity output: `/cmd_vel_smoothed`
 - Nav2 static map generated from the active Unitree IsaacLab env and passed as
   `map:=/absolute/path/to/kitchen_g1_nav_map.yaml`
-- Unitree DDS locomotion command receiver: `rt/run_command/cmd`
+- Unitree sim UDP command bridge: `127.0.0.1:18080`, writing the existing
+  Wholebody run command channel. DDS `rt/run_command/cmd` remains an optional
+  legacy transport but is not the V1 default.
 
 V1.5 perception modes additionally require RGBD point cloud
 `/g1/head_rgbd/points`.
@@ -86,8 +107,10 @@ When launching Isaac Sim for this project, use the conda environment `unitree_si
 - `ros2 lifecycle get /bt_navigator` reports `active`.
 - RViz shows map, G1 footprint, TF, local costmap, global costmap, and planned path.
 - Sending a Nav2 goal produces `/cmd_vel_smoothed`.
-- `g1_cmd_vel_adapter` publishes DDS commands to `rt/run_command/cmd`.
-- Stopping Nav2 velocity output produces zero DDS velocity within `cmd_timeout_sec`.
+- `g1_cmd_vel_adapter` sends UDP JSON commands to the Unitree sim command
+  bridge.
+- Stopping Nav2 velocity output produces a zero policy command within
+  `cmd_timeout_sec`.
 
 ## Notes
 
