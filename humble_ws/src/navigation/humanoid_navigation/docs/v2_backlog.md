@@ -149,6 +149,50 @@ Hardware validation must not start until these safety controls are in place:
 4. Footprint inflation may need to be increased to account for gait sway and
    arm configuration.
 
+## HUM-46: Unitree Interface Adapter for Sim and Real Nav2 IO
+
+### Goal
+
+Build a Unitree-facing adapter so Nav2 can use the same ROS topic/frame
+contract in simulator and on real G1 without depending directly on IsaacSim ROS
+Bridge publishers for every runtime interface.
+
+### Candidate Adapter Boundary
+
+The adapter should publish the ROS interfaces Nav2 expects:
+
+```text
+frames: map -> odom -> base_link
+odometry: /odom
+velocity input: /cmd_vel_smoothed
+policy command output: rt/run_command/cmd
+optional depth input: /g1/head_rgbd/points
+```
+
+For simulator mode, the adapter can read Unitree simulator state and camera
+interfaces from `/data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab/`.
+For hardware mode, it should use the matching real G1 state, image, and command
+interfaces once they are confirmed.
+
+### Why This Is V2
+
+V1.0 is intentionally simulator-only and uses IsaacSim ROS Bridge for `/clock`,
+TF, and `/odom`. V1.5 adds depth perception through the same simulator bridge.
+The Unitree adapter is a larger integration layer whose value is sim/real
+parity, so it belongs after the static-map simulator demo is accepted.
+
+### Acceptance Requirements
+
+1. The adapter publishes `/odom` and TF with frame names compatible with
+   `profiles/g1.yaml`.
+2. `/cmd_vel_smoothed` is clamped by the G1 profile limits before it reaches
+   `rt/run_command/cmd`.
+3. Command timeout sends zero velocity.
+4. Simulator and hardware modes keep the same Nav2 launch arguments where
+   feasible.
+5. A migration note documents when to use the V1/V1.5 IsaacSim ROS Bridge path
+   versus the V2 Unitree adapter path.
+
 ## HUM-39: Bumi Profile and Adapter Requirements
 
 ### Goal
