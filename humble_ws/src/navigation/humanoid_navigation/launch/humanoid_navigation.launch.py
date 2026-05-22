@@ -50,12 +50,41 @@ def _launch_setup(context):
 
     map_file = _map_file(package_dir, context)
 
-    nav2_bringup = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(nav2_launch_dir, "bringup_launch.py")),
+    map_server = Node(
+        package="nav2_map_server",
+        executable="map_server",
+        name="map_server",
+        output="screen",
+        parameters=[
+            merged_params,
+            {
+                "yaml_filename": map_file,
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+            },
+        ],
+    )
+    map_lifecycle_manager = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="lifecycle_manager_localization",
+        output="screen",
+        parameters=[
+            {
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "autostart": True,
+                "node_names": ["map_server"],
+            }
+        ],
+    )
+    nav2_navigation = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(nav2_launch_dir, "navigation_launch.py")
+        ),
         launch_arguments={
-            "map": map_file,
             "use_sim_time": LaunchConfiguration("use_sim_time"),
             "params_file": merged_params,
+            "autostart": "true",
+            "use_composition": "False",
         }.items(),
     )
     rviz_launch = IncludeLaunchDescription(
@@ -73,7 +102,7 @@ def _launch_setup(context):
         parameters=[_adapter_parameters(profile)],
     )
 
-    return [nav2_bringup, rviz_launch, g1_adapter]
+    return [map_server, map_lifecycle_manager, nav2_navigation, rviz_launch, g1_adapter]
 
 
 def _default_params_file(package_dir, context):

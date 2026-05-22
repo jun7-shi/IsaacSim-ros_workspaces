@@ -5,7 +5,7 @@ frames:
 
 topics:
   odom: /odom
-  cmd_vel: /cmd_vel_smoothed
+  cmd_vel: /cmd_vel
 
 perception:
   pointcloud_topic: /g1/head_rgbd/points

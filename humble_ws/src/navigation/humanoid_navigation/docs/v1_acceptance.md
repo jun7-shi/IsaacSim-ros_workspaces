@@ -93,10 +93,10 @@ ros2 run tf2_ros tf2_echo map base_link
 ros2 topic hz /clock
 ros2 topic hz /odom
 ros2 topic echo /map --once
-ros2 topic hz /cmd_vel_smoothed
+ros2 topic hz /cmd_vel
 ```
 
-Run the final `/cmd_vel_smoothed` check while sending a short RViz Nav2 goal.
+Run the final `/cmd_vel` check while sending a short RViz Nav2 goal.
 
 ## Confirmed Resources
 
@@ -153,6 +153,10 @@ ros2 run tf2_ros tf2_echo map base_link
 
 to view the robot pose in the global map frame.
 
+`localization_mode:=sim_ground_truth` does not start AMCL. Do not use RViz
+`2D Pose Estimate` for V1; the global pose comes from the Isaac Sim
+`map -> odom -> base_link` TF chain.
+
 The Unitree project registers the Wholebody command DDS object when the task
 contains `Wholebody` or `--enable_wholebody_dds` is set. For V1, ROS does not
 publish Unitree DDS directly. `g1_cmd_vel_adapter` sends JSON UDP packets to
@@ -194,7 +198,7 @@ For the live V1.0 acceptance run, record:
 3. Topic rates for `/clock` and `/odom`.
 4. RViz evidence that the static map, footprint, global plan, and local
    costmap render correctly.
-5. Observation that `/cmd_vel_smoothed` reaches the Unitree sim UDP bridge and
+5. Observation that `/cmd_vel` reaches the Unitree sim UDP bridge and
    updates the Wholebody run command path.
 
 V1.5 then enables the head depth bridge and validates local costmap marking and

@@ -152,7 +152,7 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
             )
 
         def _declare_parameters(self) -> None:
-            self.declare_parameter("input_cmd_vel_topic", "/cmd_vel_smoothed")
+            self.declare_parameter("input_cmd_vel_topic", "/cmd_vel")
             self.declare_parameter("transport", "udp")
             self.declare_parameter("dds_topic", "rt/run_command/cmd")
             self.declare_parameter("udp_host", "127.0.0.1")

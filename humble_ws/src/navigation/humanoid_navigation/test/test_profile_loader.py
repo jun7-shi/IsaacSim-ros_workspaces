@@ -13,6 +13,7 @@ def test_load_g1_profile_has_required_navigation_contract():
     assert profile["frames"]["map"] == "map"
     assert profile["frames"]["odom"] == "odom"
     assert profile["frames"]["base"] == "base_link"
+    assert profile["topics"]["cmd_vel"] == "/cmd_vel"
     assert profile["perception"]["pointcloud_topic"]
     assert profile["dds"]["topic"] == "rt/run_command/cmd"
     assert profile["dds"]["transport"] == "udp"

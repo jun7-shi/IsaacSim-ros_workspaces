@@ -86,7 +86,7 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
 
 - TF: `map -> odom -> base_link`
 - Odometry: `/odom`
-- Smoothed Nav2 velocity output: `/cmd_vel_smoothed`
+- Smoothed Nav2 velocity output: `/cmd_vel`
 - Nav2 static map generated from the active Unitree IsaacLab env and passed as
   `map:=/absolute/path/to/kitchen_g1_nav_map.yaml`
 - Unitree sim UDP command bridge: `127.0.0.1:18080`, writing the existing
@@ -106,7 +106,7 @@ When launching Isaac Sim for this project, use the conda environment `unitree_si
 
 - `ros2 lifecycle get /bt_navigator` reports `active`.
 - RViz shows map, G1 footprint, TF, local costmap, global costmap, and planned path.
-- Sending a Nav2 goal produces `/cmd_vel_smoothed`.
+- Sending a Nav2 goal produces `/cmd_vel`.
 - `g1_cmd_vel_adapter` sends UDP JSON commands to the Unitree sim command
   bridge.
 - Stopping Nav2 velocity output produces a zero policy command within

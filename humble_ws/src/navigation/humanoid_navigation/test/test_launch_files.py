@@ -149,9 +149,29 @@ def test_main_launch_starts_nav2_and_g1_adapter():
         encoding="utf-8"
     )
 
-    assert "bringup_launch.py" in launch_text
+    assert "navigation_launch.py" in launch_text
+    assert "bringup_launch.py" not in launch_text
     assert "g1_cmd_vel_adapter" in launch_text
     assert "nav2_bringup" in launch_text
+
+
+def test_sim_ground_truth_launch_does_not_start_amcl():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "nav2_map_server" in launch_text
+    assert "lifecycle_manager_localization" in launch_text
+    assert '"node_names": ["map_server"]' in launch_text
+    assert "amcl" not in launch_text.lower()
+
+
+def test_nav2_launch_disables_composition_for_sim_ground_truth_debuggability():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert '"use_composition": "False"' in launch_text
 
 
 def test_rviz_config_uses_map_fixed_frame_and_navigation_displays():
@@ -178,7 +198,7 @@ def test_readme_documents_static_map_launch_and_required_topics():
     assert "map -> odom -> base_link" in readme_text
     assert "/odom" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
-    assert "/cmd_vel_smoothed" in readme_text
+    assert "/cmd_vel" in readme_text
 
 
 def test_v1_acceptance_notes_document_sim_commands_and_blockers():
