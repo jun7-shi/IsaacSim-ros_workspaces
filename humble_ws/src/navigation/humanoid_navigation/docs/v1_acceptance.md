@@ -157,6 +157,18 @@ to view the robot pose in the global map frame.
 `2D Pose Estimate` for V1; the global pose comes from the Isaac Sim
 `map -> odom -> base_link` TF chain.
 
+The RViz config opens the Nav2 Navigation 2 panel, uses a top-down map view,
+and keeps extra overlays disabled by default. Send a goal with either
+`Nav2 Goal` or `2D Goal Pose`; both should result in a `PoseStamped` on
+`/goal_pose`. If clicking RViz appears to do nothing, first verify the UI path
+with:
+
+```bash
+ros2 topic echo /goal_pose --once
+```
+
+Then click-drag a goal on the map to set the goal orientation.
+
 The Unitree project registers the Wholebody command DDS object when the task
 contains `Wholebody` or `--enable_wholebody_dds` is set. For V1, ROS does not
 publish Unitree DDS directly. `g1_cmd_vel_adapter` sends JSON UDP packets to

@@ -82,6 +82,11 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   rviz:=true
 ```
 
+For `localization_mode:=sim_ground_truth`, do not use RViz `2D Pose Estimate`.
+The global pose comes from the simulator TF chain. Send goals with RViz
+`Nav2 Goal` or `2D Goal Pose`; both must publish a `PoseStamped` on
+`/goal_pose`.
+
 ## Required Inputs
 
 - TF: `map -> odom -> base_link`
@@ -105,7 +110,9 @@ When launching Isaac Sim for this project, use the conda environment `unitree_si
 ## Acceptance Checks
 
 - `ros2 lifecycle get /bt_navigator` reports `active`.
-- RViz shows map, G1 footprint, TF, local costmap, global costmap, and planned path.
+- RViz shows the static map and planned path; TF, local costmap, global costmap,
+  robot model, and RGBD point cloud displays are available but disabled by
+  default to keep goal selection unambiguous.
 - Sending a Nav2 goal produces `/cmd_vel`.
 - `g1_cmd_vel_adapter` sends UDP JSON commands to the Unitree sim command
   bridge.

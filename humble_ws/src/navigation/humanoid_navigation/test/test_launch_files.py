@@ -187,6 +187,18 @@ def test_rviz_config_uses_map_fixed_frame_and_navigation_displays():
     assert "/plan" in rviz_text
 
 
+def test_rviz_config_exposes_nav2_goal_workflow():
+    rviz_text = (PACKAGE_ROOT / "rviz" / "humanoid_navigation.rviz").read_text(
+        encoding="utf-8"
+    )
+
+    assert "nav2_rviz_plugins/Navigation 2" in rviz_text
+    assert "nav2_rviz_plugins/GoalTool" in rviz_text
+    assert "/goal_pose" in rviz_text
+    assert "rviz_common/Tool Properties" in rviz_text
+    assert "rviz_default_plugins/TopDownOrtho" in rviz_text
+
+
 def test_readme_documents_static_map_launch_and_required_topics():
     readme_text = (PACKAGE_ROOT / "README.md").read_text(encoding="utf-8")
 
