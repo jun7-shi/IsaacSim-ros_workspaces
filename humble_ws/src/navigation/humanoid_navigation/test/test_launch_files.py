@@ -34,6 +34,23 @@ def test_nav2_defaults_are_non_holonomic_for_v1():
     assert follow_path["vy_samples"] == 1
 
 
+def test_controller_uses_humble_goal_checker_plugins_key():
+    params = load_yaml("config/nav2_params.yaml")
+    controller_params = params["controller_server"]["ros__parameters"]
+
+    assert controller_params["goal_checker_plugins"] == ["stopped_goal_checker"]
+    assert "goal_checker_plugin" not in controller_params
+
+
+def test_g1_profile_maps_nav2_velocity_to_policy_command_range():
+    profile = load_yaml("profiles/g1.yaml")
+    policy_command = profile["policy_command"]
+
+    assert policy_command["min_vel_x"] == -0.6
+    assert policy_command["max_vel_x"] == 1.0
+    assert policy_command["max_vel_theta"] == 1.57
+
+
 def test_global_costmap_uses_static_map_layer():
     params = load_yaml("config/nav2_params.yaml")
     global_params = params["global_costmap"]["global_costmap"]["ros__parameters"]

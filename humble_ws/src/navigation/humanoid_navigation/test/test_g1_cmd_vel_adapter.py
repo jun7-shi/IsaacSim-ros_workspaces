@@ -32,12 +32,31 @@ def test_converter_clips_and_inverts_unitree_axes():
             enable_lateral=True,
             invert_y=True,
             invert_yaw=True,
+            policy_min_vel_x=-0.6,
+            policy_max_vel_x=1.0,
+            policy_max_vel_y=0.5,
+            policy_max_vel_theta=1.57,
         )
     )
 
     command = converter.to_command(make_twist(x=1.0, y=0.1, yaw=2.0))
 
-    assert command == [0.5, -0.1, -0.8, 0.8]
+    assert command == [1.0, -0.25, -1.57, 0.8]
+
+
+def test_converter_scales_nav2_velocity_to_policy_command_range():
+    converter = CommandConverter(
+        AdapterConfig(
+            min_vel_x=-0.2,
+            max_vel_x=0.5,
+            default_height=0.8,
+            policy_min_vel_x=-0.6,
+            policy_max_vel_x=1.0,
+        )
+    )
+
+    assert converter.to_command(make_twist(x=0.25)) == [0.5, 0.0, 0.0, 0.8]
+    assert converter.to_command(make_twist(x=-0.1)) == [-0.3, 0.0, 0.0, 0.8]
 
 
 def test_converter_forces_zero_lateral_when_disabled():
@@ -81,7 +100,7 @@ def test_command_state_returns_latest_command_before_timeout():
 
     command = state.command_at(now_sec=10.1)
 
-    assert command == [0.2, 0.0, 0.0, 0.8]
+    assert command == [0.4, 0.0, 0.0, 0.8]
 
 
 def test_udp_command_publisher_sends_json_payload_without_unitree_sdk():

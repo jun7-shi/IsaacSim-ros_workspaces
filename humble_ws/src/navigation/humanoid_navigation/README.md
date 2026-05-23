@@ -21,6 +21,8 @@ default, so the ROS Humble environment does not need `unitree_sdk2py`.
 Start the Unitree sim scene with `--enable_nav_udp_cmd_bridge` so the sim
 process can receive those packets in the `unitree_sim_lab` environment and
 write the existing Wholebody run command channel.
+The adapter treats Nav2 `Twist` values as physical planning limits and maps
+them into the G1 policy command range from `profiles/g1.yaml`.
 
 ```bash
 cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task

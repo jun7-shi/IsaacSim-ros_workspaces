@@ -224,6 +224,7 @@ def _apply_profile_overrides(params, profile):
 def _adapter_parameters(profile):
     motion = profile["motion"]
     dds = profile["dds"]
+    policy_command = profile.get("policy_command", {})
     return {
         "input_cmd_vel_topic": profile["topics"]["cmd_vel"],
         "transport": dds.get("transport", "udp"),
@@ -240,4 +241,8 @@ def _adapter_parameters(profile):
         "max_vel_x": motion["max_vel_x"],
         "max_vel_y": motion["max_vel_y"],
         "max_vel_theta": motion["max_vel_theta"],
+        "policy_min_vel_x": policy_command.get("min_vel_x", -0.6),
+        "policy_max_vel_x": policy_command.get("max_vel_x", 1.0),
+        "policy_max_vel_y": policy_command.get("max_vel_y", 0.5),
+        "policy_max_vel_theta": policy_command.get("max_vel_theta", 1.57),
     }

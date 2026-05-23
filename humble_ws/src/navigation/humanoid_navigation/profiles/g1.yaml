@@ -25,6 +25,12 @@ motion:
   acc_lim_y: 0.0
   acc_lim_theta: 1.2
 
+policy_command:
+  min_vel_x: -0.6
+  max_vel_x: 1.0
+  max_vel_y: 0.5
+  max_vel_theta: 1.57
+
 footprint:
   polygon: "[[0.22, 0.18], [0.22, -0.18], [-0.18, -0.18], [-0.18, 0.18]]"
   padding: 0.08

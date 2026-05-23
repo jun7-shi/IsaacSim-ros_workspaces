@@ -13,6 +13,10 @@ class AdapterConfig:
     max_vel_x: float = 0.5
     max_vel_y: float = 0.0
     max_vel_theta: float = 0.8
+    policy_min_vel_x: float = -0.6
+    policy_max_vel_x: float = 1.0
+    policy_max_vel_y: float = 0.5
+    policy_max_vel_theta: float = 1.57
     default_height: float = 0.8
     enable_lateral: bool = False
     invert_y: bool = True
@@ -24,15 +28,37 @@ class CommandConverter:
         self._config = config
 
     def to_command(self, msg: Twist) -> list[float]:
-        x = self._clip(msg.linear.x, self._config.min_vel_x, self._config.max_vel_x)
+        x = self._scale_axis(
+            self._clip(msg.linear.x, self._config.min_vel_x, self._config.max_vel_x),
+            self._config.min_vel_x,
+            self._config.max_vel_x,
+            self._config.policy_min_vel_x,
+            self._config.policy_max_vel_x,
+        )
         if self._config.enable_lateral:
-            y = self._clip(msg.linear.y, -self._config.max_vel_y, self._config.max_vel_y)
+            y = self._scale_axis(
+                self._clip(
+                    msg.linear.y,
+                    -self._config.max_vel_y,
+                    self._config.max_vel_y,
+                ),
+                -self._config.max_vel_y,
+                self._config.max_vel_y,
+                -self._config.policy_max_vel_y,
+                self._config.policy_max_vel_y,
+            )
         else:
             y = 0.0
-        yaw = self._clip(
-            msg.angular.z,
+        yaw = self._scale_axis(
+            self._clip(
+                msg.angular.z,
+                -self._config.max_vel_theta,
+                self._config.max_vel_theta,
+            ),
             -self._config.max_vel_theta,
             self._config.max_vel_theta,
+            -self._config.policy_max_vel_theta,
+            self._config.policy_max_vel_theta,
         )
 
         if self._config.invert_y:
@@ -40,7 +66,12 @@ class CommandConverter:
         if self._config.invert_yaw:
             yaw = -yaw
 
-        return [round(x, 4), round(y, 4), round(yaw, 4), self._config.default_height]
+        return [
+            self._round_command_value(x),
+            self._round_command_value(y),
+            self._round_command_value(yaw),
+            self._config.default_height,
+        ]
 
     def zero_command(self) -> list[float]:
         return [0.0, 0.0, 0.0, self._config.default_height]
@@ -51,6 +82,31 @@ class CommandConverter:
     @staticmethod
     def _clip(value: float, minimum: float, maximum: float) -> float:
         return min(max(value, minimum), maximum)
+
+    @staticmethod
+    def _scale_axis(
+        value: float,
+        input_min: float,
+        input_max: float,
+        output_min: float,
+        output_max: float,
+    ) -> float:
+        if value == 0.0:
+            return 0.0
+        if value > 0.0:
+            if input_max <= 0.0:
+                return 0.0
+            return (value / input_max) * output_max
+        if input_min >= 0.0:
+            return 0.0
+        return (abs(value) / abs(input_min)) * output_min
+
+    @staticmethod
+    def _round_command_value(value: float) -> float:
+        rounded = round(value, 4)
+        if abs(rounded) < 1e-9:
+            return 0.0
+        return rounded
 
 
 class CommandState:
@@ -123,6 +179,10 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
                 max_vel_x=self.get_parameter("max_vel_x").value,
                 max_vel_y=self.get_parameter("max_vel_y").value,
                 max_vel_theta=self.get_parameter("max_vel_theta").value,
+                policy_min_vel_x=self.get_parameter("policy_min_vel_x").value,
+                policy_max_vel_x=self.get_parameter("policy_max_vel_x").value,
+                policy_max_vel_y=self.get_parameter("policy_max_vel_y").value,
+                policy_max_vel_theta=self.get_parameter("policy_max_vel_theta").value,
                 default_height=self.get_parameter("default_height").value,
                 enable_lateral=self.get_parameter("enable_lateral").value,
                 invert_y=self.get_parameter("invert_y").value,
@@ -167,6 +227,10 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
             self.declare_parameter("max_vel_x", 0.5)
             self.declare_parameter("max_vel_y", 0.0)
             self.declare_parameter("max_vel_theta", 0.8)
+            self.declare_parameter("policy_min_vel_x", -0.6)
+            self.declare_parameter("policy_max_vel_x", 1.0)
+            self.declare_parameter("policy_max_vel_y", 0.5)
+            self.declare_parameter("policy_max_vel_theta", 1.57)
 
         def _on_cmd_vel(self, msg: Twist) -> None:
             self._state.update(msg, self._now_sec())
