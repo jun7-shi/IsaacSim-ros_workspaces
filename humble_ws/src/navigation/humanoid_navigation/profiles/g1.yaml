@@ -18,12 +18,12 @@ perception:
 motion:
   enable_lateral: false
   min_vel_x: -0.2
-  max_vel_x: 0.5
+  max_vel_x: 1.0
   max_vel_y: 0.0
-  max_vel_theta: 0.8
-  acc_lim_x: 0.8
+  max_vel_theta: 1.0
+  acc_lim_x: 1.0
   acc_lim_y: 0.0
-  acc_lim_theta: 1.2
+  acc_lim_theta: 2.0
 
 policy_command:
   min_vel_x: -0.6
@@ -43,5 +43,5 @@ dds:
   default_height: 0.8
   invert_y: true
   invert_yaw: true
-  cmd_timeout_sec: 0.25
-  publish_rate_hz: 50.0
+  cmd_timeout_sec: 0.5
+  publish_rate_hz: 100.0

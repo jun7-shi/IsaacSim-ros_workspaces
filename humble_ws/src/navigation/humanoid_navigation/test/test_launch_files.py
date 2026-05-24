@@ -36,8 +36,22 @@ def test_nav2_defaults_use_static_map_path_follower_for_v1():
         == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
     )
     assert follow_path["use_collision_detection"] is False
-    assert follow_path["use_rotate_to_heading"] is True
+    assert follow_path["use_rotate_to_heading"] is False
     assert follow_path["allow_reversing"] is False
+
+
+def test_g1_static_controller_counts_rotation_as_progress():
+    params = load_yaml("config/nav2_params.yaml")
+    controller_params = params["controller_server"]["ros__parameters"]
+    progress_checker = controller_params["progress_checker"]
+    follow_path = controller_params["FollowPath"]
+
+    assert controller_params["progress_checker_plugin"] == "progress_checker"
+    assert progress_checker["plugin"] == "nav2_controller::PoseProgressChecker"
+    assert progress_checker["required_movement_radius"] <= 0.2
+    assert progress_checker["required_movement_angle"] <= 0.2
+    assert progress_checker["movement_time_allowance"] >= 20.0
+    assert follow_path["desired_linear_vel"] >= 0.5
 
 
 def test_controller_uses_humble_goal_checker_plugins_key():
@@ -55,6 +69,14 @@ def test_g1_profile_keeps_policy_command_range_as_safety_clamp():
     assert policy_command["min_vel_x"] == -0.6
     assert policy_command["max_vel_x"] == 1.0
     assert policy_command["max_vel_theta"] == 1.57
+
+
+def test_g1_profile_uses_keyboard_like_command_rate_for_sim_policy():
+    profile = load_yaml("profiles/g1.yaml")
+
+    assert profile["motion"]["max_vel_x"] >= 0.8
+    assert profile["dds"]["publish_rate_hz"] >= 100.0
+    assert profile["dds"]["cmd_timeout_sec"] >= 0.5
 
 
 def test_profile_overrides_keep_pure_pursuit_controller_params():
