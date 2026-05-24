@@ -36,9 +36,10 @@ Kitchen bound prim: /World/envs/env_0/Kitchen
 cell size: 0.05 m
 free origin: robot start x/y with z=0.1
 z bounds: [0.05, 1.2]
-default excluded prims:
-  /World/envs/env_0/Robot
+deactivated prims:
   /World/envs/env_0/Object
+collision-disabled prims:
+  /World/envs/env_0/Robot
 ```
 
 The exporter temporarily applies `UsdPhysics.CollisionAPI` to static meshes
@@ -46,9 +47,10 @@ before generation. This is needed for Kitchen assets that have visual geometry
 but incomplete collision metadata; NVIDIA's occupancy map generator only sees
 collision geometry.
 
-Kitchen maps bound the occupancy export to `/World/envs/env_0/Kitchen`, but
-still deactivate `/World/envs/env_0/Robot` and `/World/envs/env_0/Object`
-during export so movable assets are not baked into static maps.
+Kitchen maps bound the occupancy export to `/World/envs/env_0/Kitchen`.
+The exporter deactivates the task object and disables robot collision during
+export. It does not deactivate `/World/envs/env_0/Robot`, because Kitchen camera
+and hand prims are owned under that robot prim and must remain valid.
 
 ## Validate The Map
 

@@ -71,14 +71,15 @@ conda run -n unitree_sim_lab python sim_main.py \
 The exporter uses NVIDIA's Isaac Sim occupancy map API
 `isaacsim.asset.gen.omap` against the live Kitchen task stage. For
 `Isaac-Kitchen-G129-Dex1-Wholebody`, the exporter automatically bounds the map
-to `/World/envs/env_0/Kitchen` and deactivates the robot and task object while
-generating the occupancy map.
+to `/World/envs/env_0/Kitchen`, deactivates the task object, and disables robot
+collision while generating the occupancy map. It does not deactivate the robot
+prim because Kitchen camera and hand prims live under it.
 
-The default movable prim exclusions are:
+The default movable exclusions are:
 
 ```text
-/World/envs/env_0/Robot
-/World/envs/env_0/Object
+deactivated: /World/envs/env_0/Object
+collision-disabled: /World/envs/env_0/Robot
 ```
 
 That prevents the G1, and any movable task object in other scenes, from being
