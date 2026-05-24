@@ -1,4 +1,6 @@
 from pathlib import Path
+import importlib.util
+import sys
 
 import yaml
 
@@ -25,13 +27,17 @@ def test_nav2_params_define_required_servers_and_costmaps():
     assert "lifecycle_manager" in params
 
 
-def test_nav2_defaults_are_non_holonomic_for_v1():
+def test_nav2_defaults_use_static_map_path_follower_for_v1():
     params = load_yaml("config/nav2_params.yaml")
     follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
 
-    assert follow_path["max_vel_y"] == 0.0
-    assert follow_path["min_vel_y"] == 0.0
-    assert follow_path["vy_samples"] == 1
+    assert (
+        follow_path["plugin"]
+        == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+    )
+    assert follow_path["use_collision_detection"] is False
+    assert follow_path["use_rotate_to_heading"] is True
+    assert follow_path["allow_reversing"] is False
 
 
 def test_controller_uses_humble_goal_checker_plugins_key():
@@ -49,6 +55,30 @@ def test_g1_profile_keeps_policy_command_range_as_safety_clamp():
     assert policy_command["min_vel_x"] == -0.6
     assert policy_command["max_vel_x"] == 1.0
     assert policy_command["max_vel_theta"] == 1.57
+
+
+def test_profile_overrides_keep_pure_pursuit_controller_params():
+    params = load_yaml("config/nav2_params.yaml")
+    profile = load_yaml("profiles/g1.yaml")
+    launch_path = PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py"
+    spec = importlib.util.spec_from_file_location("humanoid_navigation_launch", launch_path)
+    launch_module = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(PACKAGE_ROOT))
+    spec.loader.exec_module(launch_module)
+
+    launch_module._apply_profile_overrides(params, profile)
+
+    follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
+    assert (
+        follow_path["plugin"]
+        == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+    )
+    assert follow_path["desired_linear_vel"] <= profile["motion"]["max_vel_x"]
+    assert follow_path["rotate_to_heading_angular_vel"] <= profile["motion"]["max_vel_theta"]
+    assert follow_path["max_angular_accel"] == profile["motion"]["acc_lim_theta"]
+    assert "vx_samples" not in follow_path
+    assert "vy_samples" not in follow_path
+    assert "vtheta_samples" not in follow_path
 
 
 def test_global_costmap_uses_static_map_layer():

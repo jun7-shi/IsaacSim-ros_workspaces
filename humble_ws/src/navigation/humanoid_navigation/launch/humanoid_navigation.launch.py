@@ -186,16 +186,30 @@ def _apply_profile_overrides(params, profile):
         costmap_params["footprint_padding"] = footprint["padding"]
 
     follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
-    follow_path["min_vel_x"] = motion["min_vel_x"]
-    follow_path["max_vel_x"] = motion["max_vel_x"]
-    follow_path["max_vel_y"] = motion["max_vel_y"]
-    follow_path["acc_lim_x"] = motion["acc_lim_x"]
-    follow_path["acc_lim_y"] = motion["acc_lim_y"]
-    follow_path["acc_lim_theta"] = motion["acc_lim_theta"]
-    follow_path["max_vel_theta"] = motion["max_vel_theta"]
-    if motion["max_vel_y"] == 0.0:
-        follow_path["min_vel_y"] = 0.0
-        follow_path["vy_samples"] = 1
+    if (
+        follow_path.get("plugin")
+        == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+    ):
+        follow_path["desired_linear_vel"] = min(
+            float(follow_path["desired_linear_vel"]),
+            float(motion["max_vel_x"]),
+        )
+        follow_path["rotate_to_heading_angular_vel"] = min(
+            float(follow_path["rotate_to_heading_angular_vel"]),
+            float(motion["max_vel_theta"]),
+        )
+        follow_path["max_angular_accel"] = motion["acc_lim_theta"]
+    else:
+        follow_path["min_vel_x"] = motion["min_vel_x"]
+        follow_path["max_vel_x"] = motion["max_vel_x"]
+        follow_path["max_vel_y"] = motion["max_vel_y"]
+        follow_path["acc_lim_x"] = motion["acc_lim_x"]
+        follow_path["acc_lim_y"] = motion["acc_lim_y"]
+        follow_path["acc_lim_theta"] = motion["acc_lim_theta"]
+        follow_path["max_vel_theta"] = motion["max_vel_theta"]
+        if motion["max_vel_y"] == 0.0:
+            follow_path["min_vel_y"] = 0.0
+            follow_path["vy_samples"] = 1
 
     smoother = params["velocity_smoother"]["ros__parameters"]
     smoother["max_velocity"] = [
