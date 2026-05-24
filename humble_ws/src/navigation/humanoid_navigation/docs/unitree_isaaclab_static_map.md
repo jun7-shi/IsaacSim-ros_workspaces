@@ -36,8 +36,7 @@ Kitchen bound prim: /World/envs/env_0/Kitchen
 cell size: 0.05 m
 free origin: robot start x/y with z=0.1
 z bounds: [0.05, 1.2]
-Kitchen excluded prims: none
-non-Kitchen default excluded prims:
+default excluded prims:
   /World/envs/env_0/Robot
   /World/envs/env_0/Object
 ```
@@ -47,10 +46,9 @@ before generation. This is needed for Kitchen assets that have visual geometry
 but incomplete collision metadata; NVIDIA's occupancy map generator only sees
 collision geometry.
 
-Kitchen maps do not deactivate `/World/envs/env_0/Robot` because the Kitchen
-task owns camera sensors under the robot prim. Non-Kitchen exports keep the
-older robot/object exclusion defaults so movable assets are not baked into
-static maps.
+Kitchen maps bound the occupancy export to `/World/envs/env_0/Kitchen`, but
+still deactivate `/World/envs/env_0/Robot` and `/World/envs/env_0/Object`
+during export so movable assets are not baked into static maps.
 
 ## Validate The Map
 
