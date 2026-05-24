@@ -219,9 +219,33 @@ def test_main_launch_starts_nav2_and_g1_adapter():
     )
 
     assert "navigation_launch.py" in launch_text
+    assert "rviz_launch.py" not in launch_text
     assert "bringup_launch.py" not in launch_text
     assert "g1_cmd_vel_adapter" in launch_text
     assert "nav2_bringup" in launch_text
+
+
+def test_main_launch_starts_rviz_without_shutdown_handler():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'package="rviz2"' in launch_text
+    assert 'executable="rviz2"' in launch_text
+    assert "OnProcessExit" not in launch_text
+    assert "Shutdown" not in launch_text
+
+
+def test_rviz_only_launch_reopens_rviz_without_nav2_nodes():
+    launch_text = (
+        PACKAGE_ROOT / "launch" / "humanoid_navigation_rviz.launch.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'package="rviz2"' in launch_text
+    assert 'executable="rviz2"' in launch_text
+    assert "nav2_bringup" not in launch_text
+    assert "lifecycle_manager" not in launch_text
+    assert "map_server" not in launch_text
 
 
 def test_sim_ground_truth_launch_does_not_start_amcl():
@@ -278,6 +302,7 @@ def test_readme_documents_static_map_launch_and_required_topics():
     assert "kitchen_g1_nav_map.yaml" in readme_text
     assert "map -> odom -> base_link" in readme_text
     assert "/odom" in readme_text
+    assert "humanoid_navigation_rviz.launch.py" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
     assert "/cmd_vel" in readme_text
 

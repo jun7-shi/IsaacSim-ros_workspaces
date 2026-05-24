@@ -87,11 +87,15 @@ def _launch_setup(context):
             "use_composition": "False",
         }.items(),
     )
-    rviz_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(nav2_launch_dir, "rviz_launch.py")),
-        launch_arguments={
-            "rviz_config": os.path.join(package_dir, "rviz", "humanoid_navigation.rviz"),
-        }.items(),
+    rviz_launch = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz",
+        output="screen",
+        arguments=[
+            "-d",
+            os.path.join(package_dir, "rviz", "humanoid_navigation.rviz"),
+        ],
         condition=IfCondition(LaunchConfiguration("rviz")),
     )
     g1_adapter = Node(

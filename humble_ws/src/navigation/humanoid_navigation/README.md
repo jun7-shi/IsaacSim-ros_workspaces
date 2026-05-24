@@ -88,6 +88,15 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   rviz:=true
 ```
 
+To reopen RViz without restarting Nav2, run:
+
+```bash
+ros2 launch humanoid_navigation humanoid_navigation_rviz.launch.py
+```
+
+Do not relaunch `humanoid_navigation.launch.py` only to reopen RViz. That starts
+a second Nav2 stack with the same node and service names.
+
 For `localization_mode:=sim_ground_truth`, do not use RViz `2D Pose Estimate`.
 The global pose comes from the simulator TF chain. Send goals with RViz
 `Nav2 Goal` or `2D Goal Pose`; both must publish a `PoseStamped` on
