@@ -41,10 +41,10 @@ def test_converter_clips_and_inverts_unitree_axes():
 
     command = converter.to_command(make_twist(x=1.0, y=0.1, yaw=2.0))
 
-    assert command == [1.0, -0.25, -1.57, 0.8]
+    assert command == [0.5, -0.1, -0.8, 0.8]
 
 
-def test_converter_scales_nav2_velocity_to_policy_command_range():
+def test_converter_passes_nav2_velocity_without_rescaling():
     converter = CommandConverter(
         AdapterConfig(
             min_vel_x=-0.2,
@@ -55,8 +55,34 @@ def test_converter_scales_nav2_velocity_to_policy_command_range():
         )
     )
 
-    assert converter.to_command(make_twist(x=0.25)) == [0.5, 0.0, 0.0, 0.8]
-    assert converter.to_command(make_twist(x=-0.1)) == [-0.3, 0.0, 0.0, 0.8]
+    assert converter.to_command(make_twist(x=0.25)) == [0.25, 0.0, 0.0, 0.8]
+    assert converter.to_command(make_twist(x=-0.1)) == [-0.1, 0.0, 0.0, 0.8]
+
+
+def test_converter_uses_policy_range_as_safety_clamp_only():
+    converter = CommandConverter(
+        AdapterConfig(
+            min_vel_x=-1.0,
+            max_vel_x=1.0,
+            max_vel_y=1.0,
+            max_vel_theta=2.0,
+            policy_min_vel_x=-0.3,
+            policy_max_vel_x=0.4,
+            policy_max_vel_y=0.2,
+            policy_max_vel_theta=0.6,
+            default_height=0.8,
+            enable_lateral=True,
+            invert_y=True,
+            invert_yaw=True,
+        )
+    )
+
+    assert converter.to_command(make_twist(x=1.0, y=1.0, yaw=2.0)) == [
+        0.4,
+        -0.2,
+        -0.6,
+        0.8,
+    ]
 
 
 def test_converter_forces_zero_lateral_when_disabled():
@@ -100,7 +126,7 @@ def test_command_state_returns_latest_command_before_timeout():
 
     command = state.command_at(now_sec=10.1)
 
-    assert command == [0.4, 0.0, 0.0, 0.8]
+    assert command == [0.2, 0.0, 0.0, 0.8]
 
 
 def test_udp_command_publisher_sends_json_payload_without_unitree_sdk():

@@ -28,43 +28,40 @@ class CommandConverter:
         self._config = config
 
     def to_command(self, msg: Twist) -> list[float]:
-        x = self._scale_axis(
+        x = self._clip(
             self._clip(msg.linear.x, self._config.min_vel_x, self._config.max_vel_x),
-            self._config.min_vel_x,
-            self._config.max_vel_x,
             self._config.policy_min_vel_x,
             self._config.policy_max_vel_x,
         )
         if self._config.enable_lateral:
-            y = self._scale_axis(
-                self._clip(
-                    msg.linear.y,
-                    -self._config.max_vel_y,
-                    self._config.max_vel_y,
-                ),
+            y = self._clip(
+                msg.linear.y,
                 -self._config.max_vel_y,
                 self._config.max_vel_y,
-                -self._config.policy_max_vel_y,
-                self._config.policy_max_vel_y,
             )
         else:
             y = 0.0
-        yaw = self._scale_axis(
-            self._clip(
-                msg.angular.z,
-                -self._config.max_vel_theta,
-                self._config.max_vel_theta,
-            ),
+        yaw = self._clip(
+            msg.angular.z,
             -self._config.max_vel_theta,
             self._config.max_vel_theta,
-            -self._config.policy_max_vel_theta,
-            self._config.policy_max_vel_theta,
         )
 
         if self._config.invert_y:
             y = -y
         if self._config.invert_yaw:
             yaw = -yaw
+
+        y = self._clip(
+            y,
+            -self._config.policy_max_vel_y,
+            self._config.policy_max_vel_y,
+        )
+        yaw = self._clip(
+            yaw,
+            -self._config.policy_max_vel_theta,
+            self._config.policy_max_vel_theta,
+        )
 
         return [
             self._round_command_value(x),
@@ -82,24 +79,6 @@ class CommandConverter:
     @staticmethod
     def _clip(value: float, minimum: float, maximum: float) -> float:
         return min(max(value, minimum), maximum)
-
-    @staticmethod
-    def _scale_axis(
-        value: float,
-        input_min: float,
-        input_max: float,
-        output_min: float,
-        output_max: float,
-    ) -> float:
-        if value == 0.0:
-            return 0.0
-        if value > 0.0:
-            if input_max <= 0.0:
-                return 0.0
-            return (value / input_max) * output_max
-        if input_min >= 0.0:
-            return 0.0
-        return (abs(value) / abs(input_min)) * output_min
 
     @staticmethod
     def _round_command_value(value: float) -> float:

@@ -42,7 +42,7 @@ def test_controller_uses_humble_goal_checker_plugins_key():
     assert "goal_checker_plugin" not in controller_params
 
 
-def test_g1_profile_maps_nav2_velocity_to_policy_command_range():
+def test_g1_profile_keeps_policy_command_range_as_safety_clamp():
     profile = load_yaml("profiles/g1.yaml")
     policy_command = profile["policy_command"]
 
@@ -240,9 +240,12 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "KitchenRoom.usd" in acceptance_text
     assert "--enable_nav_ros_clock" in acceptance_text
     assert "--enable_nav_ros_tf_odom" in acceptance_text
+    assert "--nav_minimal_dds" in acceptance_text
+    assert "--disable_image_server" in acceptance_text
+    assert "--enable_dex1_dds" not in acceptance_text
     assert "--enable_nav_ros_pointcloud" not in acceptance_text
     assert "--headless" in acceptance_text
-    assert "  --no_render" not in acceptance_text
+    assert "  --no_render" in acceptance_text
     assert "ros2 launch humanoid_navigation humanoid_navigation.launch.py" in acceptance_text
     assert "perception_mode:=static_only" in acceptance_text
     assert "--export_nav_static_map" in acceptance_text
@@ -254,10 +257,13 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "/odom" in acceptance_text
     assert "/g1/head_rgbd/points" not in acceptance_text
     assert "5a09d46" in acceptance_text
-    assert "Ready for runtime verification" in acceptance_text
+    assert "6daaefd" in acceptance_text
+    assert "Latest Runtime Result" in acceptance_text
+    assert "short `/navigate_to_pose` goal succeeded" in acceptance_text
+    assert "Passed" in acceptance_text
     assert "no ROS `PointCloud2` publisher was found" not in acceptance_text
     assert "rt/run_command/cmd" in acceptance_text
-    assert "blocked" in acceptance_text.lower()
+    assert "blocked" not in acceptance_text.lower()
     assert "PointCloud2" not in acceptance_text
 
 

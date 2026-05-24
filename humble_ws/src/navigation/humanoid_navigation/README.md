@@ -21,20 +21,24 @@ default, so the ROS Humble environment does not need `unitree_sdk2py`.
 Start the Unitree sim scene with `--enable_nav_udp_cmd_bridge` so the sim
 process can receive those packets in the `unitree_sim_lab` environment and
 write the existing Wholebody run command channel.
-The adapter treats Nav2 `Twist` values as physical planning limits and maps
-them into the G1 policy command range from `profiles/g1.yaml`.
+The adapter treats Nav2 `Twist` values as physical velocity commands. It clips
+them to the Nav2 motion limits, applies the Unitree sign convention, and uses
+the G1 policy command range from `profiles/g1.yaml` only as a final safety
+clamp.
 
 ```bash
 cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
+  --no_render \
   --enable_cameras \
   --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
-  --enable_dex1_dds \
   --enable_nav_ros_clock \
   --enable_nav_ros_tf_odom \
-  --enable_nav_udp_cmd_bridge
+  --enable_nav_udp_cmd_bridge \
+  --nav_minimal_dds \
+  --disable_image_server
 ```
 
 Generate the map from the Unitree IsaacLab env before HUM-36 acceptance:

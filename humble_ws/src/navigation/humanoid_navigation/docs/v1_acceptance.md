@@ -27,16 +27,20 @@ Start the G1 Wholebody Isaac Sim scene from the Unitree navigation worktree:
 cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
 conda run -n unitree_sim_lab python sim_main.py \
   --device cuda:0 \
+  --no_render \
   --enable_cameras \
   --task Isaac-Kitchen-G129-Dex1-Wholebody \
   --robot_type g129 \
-  --enable_dex1_dds \
   --enable_nav_ros_clock \
   --enable_nav_ros_tf_odom \
-  --enable_nav_udp_cmd_bridge
+  --enable_nav_udp_cmd_bridge \
+  --nav_minimal_dds \
+  --disable_image_server
 ```
 
-For an automated run without the Isaac Sim GUI, append `--headless`.
+For V1 static-map acceptance, `--no_render` avoids the renderer-dependent
+camera observation path while still advancing the scripted ROS Bridge graphs.
+Use `--headless` only when RGBD/point cloud publishing is enabled for V1.5.
 
 Launch V1.0 navigation from this ROS workspace:
 
@@ -121,6 +125,7 @@ The current Unitree-side ROS bridge fixes are:
 ```text
 fe4def9 fix: resolve G1 nav odometry chassis prim
 5a09d46 fix: align nav map frame with G1 world pose
+6daaefd fix: make G1 nav sim startup minimal
 ```
 
 The Unitree worktree adds scripted equivalents of NVIDIA's official Isaac Sim
@@ -178,13 +183,20 @@ Unitree Wholebody action provider consumes the same `[x, y, yaw, height]`
 command shape. DDS `rt/run_command/cmd` remains available as an optional legacy
 transport for later integration work.
 
+The ROS adapter sends Nav2 `Twist` velocities directly as physical velocity
+commands after clipping to the configured motion limits. It does not rescale a
+partial Nav2 command to the full Unitree policy range; the policy range is only
+a final safety clamp before sending `[x, y, yaw, height]`.
+
 The Kitchen task loads `/data/jun7.shi/datasets/Lightwheel_Kitchen/Collected_KitchenRoom/KitchenRoom.usd`
 through the Unitree IsaacLab task `Isaac-Kitchen-G129-Dex1-Wholebody`.
 
-## Blocked Acceptance Items
+## Latest Runtime Result
 
-The full HUM-36 end-to-end acceptance is still pending a live run with Isaac
-Sim and Nav2 together. The required V1.0 simulator interfaces now exist.
+The V1.0 simulator and Nav2 chain was exercised with Isaac Sim and Nav2
+together. Nav2 loaded the Kitchen static map, lifecycle nodes reached `active`,
+`map -> base_link` TF was live, `/clock` and `/odom` were published, and a
+short `/navigate_to_pose` goal succeeded while the G1 stayed upright.
 
 The inherited shell can hit a ROS CLI `librcl_logging_spdlog.so` runtime issue
 when Isaac Sim's ROS bridge libraries are left in `LD_LIBRARY_PATH`; run ROS CLI
@@ -193,25 +205,19 @@ checks from a clean ROS shell or unset `LD_LIBRARY_PATH` before sourcing
 
 | Check | Required by V1.0 | Current finding | Status |
 | --- | --- | --- | --- |
-| Static map | `map_server` loads a Unitree-env map | Generate `kitchen_g1_nav_map.yaml` from `Isaac-Kitchen-G129-Dex1-Wholebody` using `--export_nav_static_map` | Ready for runtime generation |
-| Sim time | `/clock` | `--enable_nav_ros_clock` creates an official-style ROS2 Bridge clock graph | Ready for runtime verification |
-| TF | `map -> odom -> base_link` | `--enable_nav_ros_tf_odom` creates the TF chain and initializes `map -> odom` from the G1 start pose | Ready for runtime verification |
-| Odometry | `/odom` | `--enable_nav_ros_tf_odom` creates the odometry publisher | Ready for runtime verification |
-| Nav2 lifecycle | active Nav2 lifecycle nodes | Requires a full Isaac Sim plus Nav2 launch | Blocked on live acceptance |
-| G1 velocity command | UDP `127.0.0.1:18080` into Unitree sim run command memory | ROS adapter no longer imports Unitree SDK; Unitree sim receives commands with `--enable_nav_udp_cmd_bridge` | Ready for integration |
-| G1 nav task | Unitree IsaacLab Kitchen scene with G1 Wholebody | `Isaac-Kitchen-G129-Dex1-Wholebody` is registered in the Unitree worktree | Ready for integration |
+| Static map | `map_server` loads a Unitree-env map | `kitchen_g1_nav_map.yaml` loaded from `Isaac-Kitchen-G129-Dex1-Wholebody` export | Passed |
+| Sim time | `/clock` | `--enable_nav_ros_clock` creates an official-style ROS2 Bridge clock graph and `/clock` is visible to ROS | Passed |
+| TF | `map -> odom -> base_link` | `--enable_nav_ros_tf_odom` publishes the TF chain and initializes `map -> odom` from the G1 start pose | Passed |
+| Odometry | `/odom` | `/odom` is published during the live sim run | Passed |
+| Nav2 lifecycle | active Nav2 lifecycle nodes | `bt_navigator`, `controller_server`, `planner_server`, `velocity_smoother`, and `map_server` reached `active` | Passed |
+| G1 velocity command | UDP `127.0.0.1:18080` into Unitree sim run command memory | `/cmd_vel` reaches the UDP adapter and the sim consumes nonzero Wholebody run commands | Passed |
+| G1 nav task | Unitree IsaacLab Kitchen scene with G1 Wholebody | `Isaac-Kitchen-G129-Dex1-Wholebody` starts with `--nav_minimal_dds --disable_image_server` | Passed |
 
-## Required Follow-up Work
+## Remaining Follow-up Work
 
-For the live V1.0 acceptance run, record:
-
-1. Lifecycle state output for Nav2 nodes.
-2. TF echo output for `map -> base_link`.
-3. Topic rates for `/clock` and `/odom`.
-4. RViz evidence that the static map, footprint, global plan, and local
-   costmap render correctly.
-5. Observation that `/cmd_vel` reaches the Unitree sim UDP bridge and
-   updates the Wholebody run command path.
+For longer routes, tune goal selection and controller limits so the G1 avoids
+large in-place rotations near obstacles. The short V1.0 acceptance goal already
+exercises the required command path.
 
 V1.5 then enables the head depth bridge and validates local costmap marking and
 clearing against runtime obstacles.
