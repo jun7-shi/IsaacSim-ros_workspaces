@@ -17,6 +17,7 @@ class AdapterConfig:
     policy_max_vel_x: float = 1.0
     policy_max_vel_y: float = 0.5
     policy_max_vel_theta: float = 1.57
+    policy_min_abs_vel_theta: float = 0.0
     default_height: float = 0.8
     enable_lateral: bool = False
     invert_y: bool = True
@@ -62,6 +63,8 @@ class CommandConverter:
             -self._config.policy_max_vel_theta,
             self._config.policy_max_vel_theta,
         )
+        if x == 0.0 and y == 0.0:
+            yaw = self._boost_rotate_in_place_yaw(yaw)
 
         return [
             self._round_command_value(x),
@@ -86,6 +89,15 @@ class CommandConverter:
         if abs(rounded) < 1e-9:
             return 0.0
         return rounded
+
+    def _boost_rotate_in_place_yaw(self, yaw: float) -> float:
+        min_abs_yaw = min(
+            abs(self._config.policy_min_abs_vel_theta),
+            self._config.policy_max_vel_theta,
+        )
+        if min_abs_yaw == 0.0 or abs(yaw) < 1e-9 or abs(yaw) >= min_abs_yaw:
+            return yaw
+        return min_abs_yaw if yaw > 0.0 else -min_abs_yaw
 
 
 class CommandState:
@@ -162,6 +174,9 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
                 policy_max_vel_x=self.get_parameter("policy_max_vel_x").value,
                 policy_max_vel_y=self.get_parameter("policy_max_vel_y").value,
                 policy_max_vel_theta=self.get_parameter("policy_max_vel_theta").value,
+                policy_min_abs_vel_theta=self.get_parameter(
+                    "policy_min_abs_vel_theta"
+                ).value,
                 default_height=self.get_parameter("default_height").value,
                 enable_lateral=self.get_parameter("enable_lateral").value,
                 invert_y=self.get_parameter("invert_y").value,
@@ -210,6 +225,7 @@ def create_g1_cmd_vel_adapter_class(node_base_cls):
             self.declare_parameter("policy_max_vel_x", 1.0)
             self.declare_parameter("policy_max_vel_y", 0.5)
             self.declare_parameter("policy_max_vel_theta", 1.57)
+            self.declare_parameter("policy_min_abs_vel_theta", 0.0)
 
         def _on_cmd_vel(self, msg: Twist) -> None:
             self._state.update(msg, self._now_sec())

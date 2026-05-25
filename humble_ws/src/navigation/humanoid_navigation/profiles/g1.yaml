@@ -30,6 +30,7 @@ policy_command:
   max_vel_x: 1.0
   max_vel_y: 0.5
   max_vel_theta: 1.57
+  min_abs_vel_theta: 0.25
 
 footprint:
   polygon: "[[0.22, 0.18], [0.22, -0.18], [-0.18, -0.18], [-0.18, 0.18]]"

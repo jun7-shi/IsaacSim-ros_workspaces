@@ -146,6 +146,10 @@ the G1 adapter. RViz displays `/g1/cmd_vel_debug_markers` by default:
   Unitree axis conversion.
 - Text marker: numeric `vx`, `vy`, and `wz` values for both layers.
 
+The G1 profile applies a small yaw floor only for rotate-in-place commands so
+controller outputs below the locomotion policy deadband still produce visible
+turning. Forward path-following commands are not yaw-boosted.
+
 Record the relevant command and pose topics while sending a goal:
 
 ```bash

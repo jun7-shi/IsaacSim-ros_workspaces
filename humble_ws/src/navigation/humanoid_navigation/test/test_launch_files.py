@@ -69,6 +69,7 @@ def test_g1_profile_keeps_policy_command_range_as_safety_clamp():
     assert policy_command["min_vel_x"] == -0.6
     assert policy_command["max_vel_x"] == 1.0
     assert policy_command["max_vel_theta"] == 1.57
+    assert policy_command["min_abs_vel_theta"] >= 0.2
 
 
 def test_g1_profile_uses_keyboard_like_command_rate_for_sim_policy():

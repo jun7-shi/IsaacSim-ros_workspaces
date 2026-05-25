@@ -135,6 +135,9 @@ def create_g1_cmd_vel_debug_visualizer_class(node_base_cls):
                 policy_max_vel_x=self.get_parameter("policy_max_vel_x").value,
                 policy_max_vel_y=self.get_parameter("policy_max_vel_y").value,
                 policy_max_vel_theta=self.get_parameter("policy_max_vel_theta").value,
+                policy_min_abs_vel_theta=self.get_parameter(
+                    "policy_min_abs_vel_theta"
+                ).value,
                 default_height=self.get_parameter("default_height").value,
                 enable_lateral=self.get_parameter("enable_lateral").value,
                 invert_y=self.get_parameter("invert_y").value,
@@ -189,6 +192,7 @@ def create_g1_cmd_vel_debug_visualizer_class(node_base_cls):
             self.declare_parameter("policy_max_vel_x", 1.0)
             self.declare_parameter("policy_max_vel_y", 0.5)
             self.declare_parameter("policy_max_vel_theta", 1.57)
+            self.declare_parameter("policy_min_abs_vel_theta", 0.0)
 
         def _on_cmd_vel(self, msg: Twist) -> None:
             now_sec = self._now_sec()
