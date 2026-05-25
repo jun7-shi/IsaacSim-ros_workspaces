@@ -143,7 +143,7 @@ the G1 adapter. RViz displays `/g1/cmd_vel_debug_markers` by default:
 
 - Green arrow: Nav2 `Twist` direction from `/cmd_vel`.
 - Yellow arrow: adapter-equivalent G1 policy direction after clipping and
-  Unitree axis/yaw inversion.
+  Unitree axis conversion.
 - Text marker: numeric `vx`, `vy`, and `wz` values for both layers.
 
 Record the relevant command and pose topics while sending a goal:

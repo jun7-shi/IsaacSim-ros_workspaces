@@ -23,6 +23,14 @@ def test_load_g1_profile_has_required_navigation_contract():
     assert profile["motion"]["enable_lateral"] is False
 
 
+def test_g1_profile_keeps_nav2_positive_yaw_positive_for_policy():
+    profile_path = Path(__file__).parents[1] / "profiles" / "g1.yaml"
+
+    profile = load_profile(profile_path)
+
+    assert profile["dds"]["invert_yaw"] is False
+
+
 def test_load_profile_rejects_missing_required_section(tmp_path):
     profile_path = tmp_path / "bad.yaml"
     profile_path.write_text(
