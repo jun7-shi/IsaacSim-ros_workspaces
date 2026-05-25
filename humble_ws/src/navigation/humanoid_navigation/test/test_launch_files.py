@@ -143,7 +143,9 @@ def test_static_only_mode_uses_no_sensor_obstacle_layer():
     params = load_yaml("params/perception_static_only.yaml")
     local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
 
-    assert local_params["plugins"] == ["inflation_layer"]
+    assert local_params["plugins"] == ["static_layer", "inflation_layer"]
+    assert local_params["static_layer"]["plugin"] == "nav2_costmap_2d::StaticLayer"
+    assert local_params["static_layer"]["map_subscribe_transient_local"] is True
     assert "rgbd_obstacle_layer" not in local_params
     assert "rgbd_voxel_layer" not in local_params
 
