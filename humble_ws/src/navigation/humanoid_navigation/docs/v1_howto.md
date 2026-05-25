@@ -42,11 +42,11 @@ conda run -n unitree_sim_lab python sim_main.py \
 ```
 
 For GUI runs, `--nav_minimal_dds` skips the original Unitree RGB camera
-observation-manager update and throttles the action provider's manual render to
-every 4 provider ticks by default. Add `--nav_action_render_interval 1` only
-when you need every GUI frame during debugging. For fastest V1 static-map runs
-without a GUI, add `--no_render`; do not use `--no_render` with the V1.5
-PointCloud2 bridge.
+observation-manager update. It renders the action-provider view every provider
+tick by default so Isaac Sim's viewport FPS reflects actual loop throughput.
+Use `--nav_action_render_interval N` only when intentionally trading viewport
+smoothness for loop throughput. For fastest V1 static-map runs without a GUI,
+add `--no_render`; do not use `--no_render` with the V1.5 PointCloud2 bridge.
 
 Start Nav2 and RViz:
 
@@ -312,15 +312,20 @@ Root-cause evidence:
   G1 task defines front/wrist cameras, so this was camera work even before the
   new D435 depth path.
 
-Final V1 solution:
+Follow-up correction:
 
 - `--nav_minimal_dds` skips original action-provider observation-manager
   updates.
-- GUI `--nav_minimal_dds` throttles manual action-provider rendering to every
-  4 provider ticks by default.
-- `--nav_action_render_interval N` can override the GUI throttle.
+- GUI `--nav_minimal_dds` renders every provider tick by default. A previous
+  throttle made the Isaac Sim viewport FPS look like loop frequency divided by
+  the render interval, which hid the actual loop throughput.
+- `--nav_action_render_interval N` remains available only as an explicit
+  diagnostic tradeoff.
 - `--enable_nav_ros_pointcloud` keeps every-tick rendering because the ROS
   PointCloud2 graph depends on render-product updates.
+- The Wholebody action provider now prints `[NavActionProfile]` timing
+  breakdowns when profiling is enabled, covering policy, command mixing,
+  physics step, scene update, render, and observation-manager time.
 
 ## V1 Acceptance Checklist
 
