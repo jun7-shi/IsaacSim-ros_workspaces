@@ -77,6 +77,24 @@ ros2 launch humanoid_navigation humanoid_navigation.launch.py \
   map:=/absolute/path/to/kitchen_g1_nav_map.yaml
 ```
 
+Start Isaac Sim for V1.5 with the navigation Kitchen task and image bridge:
+
+```bash
+cd /data/jun7.shi/code/poc/unitree/Manipulation/.worktrees/unitree-g1-nav-task
+conda run -n unitree_sim_lab python sim_main.py \
+  --device cuda:0 \
+  --headless \
+  --enable_cameras \
+  --task Isaac-Kitchen-G129-Dex1-Wholebody-Nav \
+  --robot_type g129 \
+  --enable_nav_ros_clock \
+  --enable_nav_ros_tf_odom \
+  --enable_nav_ros_rgbd_images \
+  --enable_nav_udp_cmd_bridge \
+  --nav_minimal_dds \
+  --disable_image_server
+```
+
 Optional RViz:
 
 ```bash
@@ -113,8 +131,15 @@ The global pose comes from the simulator TF chain. Send goals with RViz
   Wholebody run command channel. DDS `rt/run_command/cmd` remains an optional
   legacy transport but is not the V1 default.
 
-V1.5 perception modes additionally require RGBD point cloud
-`/g1/head_rgbd/points`.
+V1.5 perception modes require Isaac Sim RGBD image topics
+`/g1/head_rgbd/rgb/image_raw`, `/g1/head_rgbd/depth/image_raw`, and
+`/g1/head_rgbd/camera_info`. The ROS bringup starts
+`depth_image_to_pointcloud` in `obstacle_2d` and `voxel_3d` modes; that node
+downsamples the depth image locally and publishes `/g1/head_rgbd/points` for
+Nav2 `ObstacleLayer` or `VoxelLayer`. The same launch starts a configurable
+static `base_link -> g1_head_d435_depth_optical_frame` TF from `profiles/g1.yaml`;
+update `camera_xyz` and `camera_xyzw` there after measuring the exact G1 camera
+extrinsic.
 
 ## G1 Simulation Resources
 

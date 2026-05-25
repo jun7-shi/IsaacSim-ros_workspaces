@@ -16,7 +16,8 @@ def Xform "Robot" (
         {
             custom string cameraRole = "navigation_depth"
             custom string rosFrameId = "g1_head_d435_depth_optical_frame"
-            custom string rosTopic = "/g1/head_rgbd/points"
+            custom string rosDepthTopic = "/g1/head_rgbd/depth/image_raw"
+            custom string rosRgbTopic = "/g1/head_rgbd/rgb/image_raw"
             float2 clippingRange = (0.05, 5)
             float focalLength = 18.0
             float horizontalAperture = 20.0

@@ -4,12 +4,12 @@ mount_link: d435_link
 camera_prim: /Robot/d435_link/head_d435_depth_camera
 camera_frame: g1_head_d435_depth_optical_frame
 pointcloud_topic: /g1/head_rgbd/points
-depth_topic: /g1/head_rgbd/depth
-rgb_topic: /g1/head_rgbd/rgb
+depth_topic: /g1/head_rgbd/depth/image_raw
+rgb_topic: /g1/head_rgbd/rgb/image_raw
 camera_info_topic: /g1/head_rgbd/camera_info
 default_map_package: humanoid_navigation
 default_map: maps/g1_static_warehouse.yaml
 notes:
   - This package owns the navigation-specific USD layer.
   - Unitree source robot assets remain unmodified.
-  - Isaac Sim ROS2 bridge or an IsaacLab publisher must convert the camera output to sensor_msgs/PointCloud2 on pointcloud_topic.
+  - Isaac Sim publishes RGB/depth images only; humanoid_navigation converts depth images to a decimated sensor_msgs/PointCloud2 for Nav2 VoxelLayer locally.

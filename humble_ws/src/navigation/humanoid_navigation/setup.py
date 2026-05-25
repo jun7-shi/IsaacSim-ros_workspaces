@@ -36,6 +36,7 @@ setup(
     entry_points={
         "console_scripts": [
             "g1_cmd_vel_adapter = humanoid_navigation.g1_cmd_vel_adapter:main",
+            "depth_image_to_pointcloud = humanoid_navigation.depth_image_to_pointcloud:main",
         ],
     },
 )

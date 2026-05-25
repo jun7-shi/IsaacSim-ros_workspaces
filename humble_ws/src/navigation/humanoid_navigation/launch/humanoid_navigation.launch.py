@@ -112,6 +112,7 @@ def _launch_setup(context):
         nav2_navigation,
         rviz_launch,
         g1_adapter,
+        *_perception_converter_nodes(profile, perception_mode),
     ]
 
 
@@ -178,6 +179,7 @@ def _deep_update(base, overlay):
 def _apply_profile_overrides(params, profile):
     frames = profile["frames"]
     topics = profile["topics"]
+    perception = profile["perception"]
     footprint = profile["footprint"]
     motion = profile["motion"]
 
@@ -194,6 +196,7 @@ def _apply_profile_overrides(params, profile):
         costmap_params["robot_base_frame"] = frames["base"]
         costmap_params["footprint"] = footprint["polygon"]
         costmap_params["footprint_padding"] = footprint["padding"]
+        _apply_pointcloud_observation_overrides(costmap_params, perception)
 
     follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
     pure_pursuit_plugin = (
@@ -247,6 +250,72 @@ def _apply_profile_overrides(params, profile):
         -motion["acc_lim_theta"],
     ]
     smoother["odom_topic"] = topics["odom"]
+
+
+def _apply_pointcloud_observation_overrides(costmap_params, perception):
+    for layer_name in ("rgbd_obstacle_layer", "rgbd_voxel_layer"):
+        layer = costmap_params.get(layer_name)
+        if not isinstance(layer, dict):
+            continue
+        pointcloud = layer.get("pointcloud")
+        if not isinstance(pointcloud, dict):
+            continue
+
+        pointcloud["topic"] = perception["pointcloud_topic"]
+        for profile_key, param_key in (
+            ("obstacle_max_range", "obstacle_max_range"),
+            ("raytrace_max_range", "raytrace_max_range"),
+            ("min_obstacle_height", "min_obstacle_height"),
+            ("max_obstacle_height", "max_obstacle_height"),
+        ):
+            if profile_key in perception:
+                pointcloud[param_key] = perception[profile_key]
+        if "max_obstacle_height" in perception:
+            layer["max_obstacle_height"] = perception["max_obstacle_height"]
+
+
+def _perception_converter_nodes(profile, perception_mode):
+    if perception_mode in ("obstacle_2d", "voxel_3d"):
+        perception = profile["perception"]
+        camera_xyz = perception["camera_xyz"]
+        camera_xyzw = perception["camera_xyzw"]
+        return [
+            Node(
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                name="g1_head_rgbd_static_tf",
+                arguments=[
+                    str(camera_xyz[0]),
+                    str(camera_xyz[1]),
+                    str(camera_xyz[2]),
+                    str(camera_xyzw[0]),
+                    str(camera_xyzw[1]),
+                    str(camera_xyzw[2]),
+                    str(camera_xyzw[3]),
+                    perception["camera_parent_frame"],
+                    perception["pointcloud_frame"],
+                ],
+            ),
+            Node(
+                package="humanoid_navigation",
+                executable="depth_image_to_pointcloud",
+                name="g1_depth_image_to_pointcloud",
+                output="screen",
+                parameters=[
+                    {
+                        "depth_topic": perception["depth_topic"],
+                        "camera_info_topic": perception["camera_info_topic"],
+                        "pointcloud_topic": perception["pointcloud_topic"],
+                        "pointcloud_frame": perception["pointcloud_frame"],
+                        "stride": perception["voxel_point_stride"],
+                        "min_depth_m": perception.get("min_depth_m", 0.1),
+                        "max_depth_m": perception.get("obstacle_max_range", 4.0),
+                        "depth_scale": perception.get("depth_scale", 0.001),
+                    }
+                ],
+            )
+        ]
+    return []
 
 
 def _adapter_parameters(profile):

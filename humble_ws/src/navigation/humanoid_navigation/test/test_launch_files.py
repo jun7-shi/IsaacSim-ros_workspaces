@@ -173,8 +173,50 @@ def test_voxel_3d_mode_uses_voxel_layer():
     assert "rgbd_voxel_layer" in local_params["plugins"]
     assert voxel_layer["plugin"] == "nav2_costmap_2d::VoxelLayer"
     assert voxel_layer["pointcloud"]["data_type"] == "PointCloud2"
+    assert voxel_layer["pointcloud"]["topic"] == "/g1/head_rgbd/points"
     assert voxel_layer["pointcloud"]["marking"] is True
     assert voxel_layer["pointcloud"]["clearing"] is True
+
+
+def test_voxel_3d_launch_starts_depth_image_pointcloud_converter():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "depth_image_to_pointcloud" in launch_text
+    assert "perception_mode in" in launch_text
+    assert '("obstacle_2d", "voxel_3d")' in launch_text
+    assert "depth_topic" in launch_text
+    assert "camera_info_topic" in launch_text
+    assert "pointcloud_topic" in launch_text
+    assert "voxel_point_stride" in launch_text
+
+
+def test_voxel_3d_launch_publishes_camera_static_tf():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "static_transform_publisher" in launch_text
+    assert "g1_head_rgbd_static_tf" in launch_text
+    assert "camera_parent_frame" in launch_text
+    assert "camera_xyz" in launch_text
+    assert "camera_xyzw" in launch_text
+
+
+def test_g1_profile_defines_depth_image_converter_contract():
+    profile = load_yaml("profiles/g1.yaml")
+    perception = profile["perception"]
+
+    assert perception["depth_topic"] == "/g1/head_rgbd/depth/image_raw"
+    assert perception["rgb_topic"] == "/g1/head_rgbd/rgb/image_raw"
+    assert perception["camera_info_topic"] == "/g1/head_rgbd/camera_info"
+    assert perception["pointcloud_topic"] == "/g1/head_rgbd/points"
+    assert perception["pointcloud_frame"] == "g1_head_d435_depth_optical_frame"
+    assert perception["camera_parent_frame"] == "base_link"
+    assert len(perception["camera_xyz"]) == 3
+    assert len(perception["camera_xyzw"]) == 4
+    assert perception["voxel_point_stride"] >= 4
 
 
 def test_sim_ground_truth_localization_params_document_required_frames():
@@ -433,7 +475,9 @@ def test_g1_nav_usd_asset_layer_lives_in_package_assets():
     assert 'defaultPrim = "Robot"' in asset_text
     assert "g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd" in asset_text
     assert 'def Camera "head_d435_depth_camera"' in asset_text
-    assert 'custom string rosTopic = "/g1/head_rgbd/points"' in asset_text
+    assert 'custom string rosDepthTopic = "/g1/head_rgbd/depth/image_raw"' in asset_text
+    assert 'custom string rosRgbTopic = "/g1/head_rgbd/rgb/image_raw"' in asset_text
+    assert 'custom string rosTopic = "/g1/head_rgbd/points"' not in asset_text
     assert 'custom string rosFrameId = "g1_head_d435_depth_optical_frame"' in asset_text
     assert "xformOp:orient" in asset_text
     assert "xformOp:scale" in asset_text
@@ -445,6 +489,8 @@ def test_g1_nav_asset_manifest_documents_carter_map_reuse():
 
     assert manifest["asset"] == "g1_29dof_with_dex1_nav_depth.usd"
     assert manifest["mount_link"] == "d435_link"
+    assert manifest["depth_topic"] == "/g1/head_rgbd/depth/image_raw"
+    assert manifest["rgb_topic"] == "/g1/head_rgbd/rgb/image_raw"
     assert manifest["pointcloud_topic"] == "/g1/head_rgbd/points"
     assert manifest["default_map_package"] == "humanoid_navigation"
     assert manifest["default_map"] == "maps/g1_static_warehouse.yaml"

@@ -8,7 +8,17 @@ topics:
   cmd_vel: /cmd_vel
 
 perception:
+  rgb_topic: /g1/head_rgbd/rgb/image_raw
+  depth_topic: /g1/head_rgbd/depth/image_raw
+  camera_info_topic: /g1/head_rgbd/camera_info
   pointcloud_topic: /g1/head_rgbd/points
+  pointcloud_frame: g1_head_d435_depth_optical_frame
+  camera_parent_frame: base_link
+  camera_xyz: [0.20, 0.0, 0.45]
+  camera_xyzw: [-0.5, 0.5, -0.5, 0.5]
+  voxel_point_stride: 8
+  depth_scale: 0.001
+  min_depth_m: 0.1
   obstacle_max_range: 4.0
   raytrace_max_range: 5.0
   min_obstacle_height: 0.05
