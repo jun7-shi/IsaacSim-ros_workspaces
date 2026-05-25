@@ -36,7 +36,7 @@ def test_nav2_defaults_use_static_map_path_follower_for_v1():
         == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
     )
     assert follow_path["use_collision_detection"] is False
-    assert follow_path["use_rotate_to_heading"] is False
+    assert follow_path["use_rotate_to_heading"] is True
     assert follow_path["allow_reversing"] is False
 
 
