@@ -146,6 +146,49 @@ def test_udp_command_publisher_sends_json_payload_without_unitree_sdk():
     }
 
 
+def test_cmd_vel_debugger_reuses_adapter_conversion_for_policy_debug():
+    from humanoid_navigation.g1_cmd_vel_debug_visualizer import (
+        policy_command_from_twist,
+    )
+
+    command = policy_command_from_twist(
+        make_twist(x=0.3, y=0.1, yaw=0.2),
+        AdapterConfig(
+            max_vel_y=0.2,
+            max_vel_theta=0.8,
+            default_height=0.8,
+            enable_lateral=True,
+            invert_y=True,
+            invert_yaw=True,
+        ),
+    )
+
+    assert command == [0.3, -0.1, -0.2, 0.8]
+
+
+def test_cmd_vel_debugger_builds_rviz_markers_for_nav2_and_policy_vectors():
+    from humanoid_navigation.g1_cmd_vel_debug_visualizer import (
+        create_velocity_marker_array,
+    )
+
+    markers = create_velocity_marker_array(
+        nav_twist=make_twist(x=0.3, y=0.1, yaw=0.2),
+        policy_command=[0.3, -0.1, -0.2, 0.8],
+        frame_id="base_link",
+        scale=1.0,
+    )
+
+    assert len(markers.markers) == 3
+    assert markers.markers[0].ns == "nav2_cmd_vel"
+    assert markers.markers[0].points[1].x == 0.3
+    assert markers.markers[0].points[1].y == 0.1
+    assert markers.markers[1].ns == "g1_policy_cmd"
+    assert markers.markers[1].points[1].x == 0.3
+    assert markers.markers[1].points[1].y == -0.1
+    assert "nav2" in markers.markers[2].text
+    assert "policy" in markers.markers[2].text
+
+
 def test_main_ignores_external_shutdown_without_double_shutdown(monkeypatch):
     from humanoid_navigation.g1_cmd_vel_adapter import main
 

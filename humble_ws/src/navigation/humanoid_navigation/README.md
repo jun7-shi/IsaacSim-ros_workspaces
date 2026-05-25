@@ -112,6 +112,8 @@ The global pose comes from the simulator TF chain. Send goals with RViz
 - Unitree sim UDP command bridge: `127.0.0.1:18080`, writing the existing
   Wholebody run command channel. DDS `rt/run_command/cmd` remains an optional
   legacy transport but is not the V1 default.
+- Command diagnostics: `/g1/cmd_vel_debug_markers` for RViz arrows and
+  `/g1/policy_cmd_debug` for the adapter-equivalent policy command vector.
 
 V1.5 perception modes additionally require RGBD point cloud
 `/g1/head_rgbd/points`.
@@ -133,6 +135,22 @@ When launching Isaac Sim for this project, use the conda environment `unitree_si
   bridge.
 - Stopping Nav2 velocity output produces a zero policy command within
   `cmd_timeout_sec`.
+
+## Command Direction Diagnostics
+
+`humanoid_navigation.launch.py` starts `g1_cmd_vel_debug_visualizer` alongside
+the G1 adapter. RViz displays `/g1/cmd_vel_debug_markers` by default:
+
+- Green arrow: Nav2 `Twist` direction from `/cmd_vel`.
+- Yellow arrow: adapter-equivalent G1 policy direction after clipping and
+  Unitree axis/yaw inversion.
+- Text marker: numeric `vx`, `vy`, and `wz` values for both layers.
+
+Record the relevant command and pose topics while sending a goal:
+
+```bash
+ros2 bag record /cmd_vel /cmd_vel_nav /g1/policy_cmd_debug /odom /tf
+```
 
 ## Notes
 

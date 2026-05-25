@@ -280,6 +280,7 @@ def test_rviz_config_uses_map_fixed_frame_and_navigation_displays():
     assert "/local_costmap/costmap" in rviz_text
     assert "/global_costmap/costmap" in rviz_text
     assert "/plan" in rviz_text
+    assert "/g1/cmd_vel_debug_markers" in rviz_text
 
 
 def test_rviz_config_exposes_nav2_goal_workflow():
@@ -292,6 +293,22 @@ def test_rviz_config_exposes_nav2_goal_workflow():
     assert "/goal_pose" in rviz_text
     assert "rviz_common/Tool Properties" in rviz_text
     assert "rviz_default_plugins/TopDownOrtho" in rviz_text
+
+
+def test_launch_starts_cmd_vel_debug_visualizer_for_rviz_diagnostics():
+    launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
+        encoding="utf-8"
+    )
+    setup_text = (PACKAGE_ROOT / "setup.py").read_text(encoding="utf-8")
+    package_text = (PACKAGE_ROOT / "package.xml").read_text(encoding="utf-8")
+
+    assert "g1_cmd_vel_debug_visualizer" in launch_text
+    assert "debug_marker_topic" in launch_text
+    assert "/g1/cmd_vel_debug_markers" in launch_text
+    assert "/g1/policy_cmd_debug" in launch_text
+    assert "g1_cmd_vel_debug_visualizer" in setup_text
+    assert "<exec_depend>visualization_msgs</exec_depend>" in package_text
+    assert "<exec_depend>std_msgs</exec_depend>" in package_text
 
 
 def test_readme_documents_static_map_launch_and_required_topics():
@@ -307,6 +324,8 @@ def test_readme_documents_static_map_launch_and_required_topics():
     assert "humanoid_navigation_rviz.launch.py" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
     assert "/cmd_vel" in readme_text
+    assert "/g1/policy_cmd_debug" in readme_text
+    assert "/g1/cmd_vel_debug_markers" in readme_text
 
 
 def test_v1_acceptance_notes_document_sim_commands_and_blockers():
