@@ -36,12 +36,18 @@ def test_nav2_defaults_use_static_map_path_follower_for_v1():
 
     assert (
         follow_path["plugin"]
+        == "nav2_rotation_shim_controller::RotationShimController"
+    )
+    assert (
+        follow_path["primary_controller"]
         == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
     )
     assert follow_path["use_collision_detection"] is False
     assert follow_path["use_rotate_to_heading"] is False
+    assert follow_path["rotate_to_goal_heading"] is True
+    assert follow_path["closed_loop"] is False
     assert follow_path["allow_reversing"] is False
-    assert goal_checker["yaw_goal_tolerance"] >= 3.0
+    assert goal_checker["yaw_goal_tolerance"] <= 0.5
 
 
 def test_g1_static_controller_counts_rotation_as_progress():
@@ -98,6 +104,10 @@ def test_profile_overrides_keep_pure_pursuit_controller_params():
     follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
     assert (
         follow_path["plugin"]
+        == "nav2_rotation_shim_controller::RotationShimController"
+    )
+    assert (
+        follow_path["primary_controller"]
         == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
     )
     assert follow_path["desired_linear_vel"] <= profile["motion"]["max_vel_x"]

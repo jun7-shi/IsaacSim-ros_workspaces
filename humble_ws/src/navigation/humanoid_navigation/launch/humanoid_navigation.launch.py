@@ -204,10 +204,14 @@ def _apply_profile_overrides(params, profile):
         costmap_params["footprint_padding"] = footprint["padding"]
 
     follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
-    if (
-        follow_path.get("plugin")
-        == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-    ):
+    pure_pursuit_plugin = (
+        "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+    )
+    uses_pure_pursuit = (
+        follow_path.get("plugin") == pure_pursuit_plugin
+        or follow_path.get("primary_controller") == pure_pursuit_plugin
+    )
+    if uses_pure_pursuit:
         follow_path["desired_linear_vel"] = min(
             float(follow_path["desired_linear_vel"]),
             float(motion["max_vel_x"]),
