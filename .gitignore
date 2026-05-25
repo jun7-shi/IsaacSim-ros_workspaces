@@ -8,4 +8,11 @@ build_ws/jazzy
 build_ws/humble
 .vscode/
 .*.pyc
+*.py[cod]
+__pycache__/
 .worktrees/
+humble_ws/debug_bags/
+humble_ws/debug_maps/
+humble_ws/debug_overlays/
+humble_ws/src/navigation/humanoid_navigation/maps/logs/
+humble_ws/src/navigation/humanoid_navigation/maps/unitree_g1_nav_map.*

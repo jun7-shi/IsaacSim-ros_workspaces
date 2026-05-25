@@ -36,10 +36,6 @@ setup(
     entry_points={
         "console_scripts": [
             "g1_cmd_vel_adapter = humanoid_navigation.g1_cmd_vel_adapter:main",
-            (
-                "g1_cmd_vel_debug_visualizer = "
-                "humanoid_navigation.g1_cmd_vel_debug_visualizer:main"
-            ),
         ],
     },
 )

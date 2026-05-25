@@ -295,7 +295,8 @@ def test_rviz_config_uses_map_fixed_frame_and_navigation_displays():
     assert "/local_costmap/costmap" in rviz_text
     assert "/global_costmap/costmap" in rviz_text
     assert "/plan" in rviz_text
-    assert "/g1/cmd_vel_debug_markers" in rviz_text
+    assert "/g1/cmd_vel_debug_markers" not in rviz_text
+    assert "G1 Command Debug" not in rviz_text
 
 
 def test_rviz_config_exposes_nav2_goal_workflow():
@@ -310,20 +311,22 @@ def test_rviz_config_exposes_nav2_goal_workflow():
     assert "rviz_default_plugins/TopDownOrtho" in rviz_text
 
 
-def test_launch_starts_cmd_vel_debug_visualizer_for_rviz_diagnostics():
+def test_v1_removes_failed_g1_command_debug_visualizer():
     launch_text = (PACKAGE_ROOT / "launch" / "humanoid_navigation.launch.py").read_text(
         encoding="utf-8"
     )
     setup_text = (PACKAGE_ROOT / "setup.py").read_text(encoding="utf-8")
     package_text = (PACKAGE_ROOT / "package.xml").read_text(encoding="utf-8")
+    rviz_text = (PACKAGE_ROOT / "rviz" / "humanoid_navigation.rviz").read_text(
+        encoding="utf-8"
+    )
 
-    assert "g1_cmd_vel_debug_visualizer" in launch_text
-    assert "debug_marker_topic" in launch_text
-    assert "/g1/cmd_vel_debug_markers" in launch_text
-    assert "/g1/policy_cmd_debug" in launch_text
-    assert "g1_cmd_vel_debug_visualizer" in setup_text
-    assert "<exec_depend>visualization_msgs</exec_depend>" in package_text
-    assert "<exec_depend>std_msgs</exec_depend>" in package_text
+    for text in (launch_text, setup_text, package_text, rviz_text):
+        assert "g1_cmd_vel_debug_visualizer" not in text
+        assert "cmd_vel_debug_markers" not in text
+        assert "policy_cmd_debug" not in text
+    assert "<exec_depend>visualization_msgs</exec_depend>" not in package_text
+    assert "<exec_depend>std_msgs</exec_depend>" not in package_text
 
 
 def test_readme_documents_static_map_launch_and_required_topics():
@@ -339,8 +342,8 @@ def test_readme_documents_static_map_launch_and_required_topics():
     assert "humanoid_navigation_rviz.launch.py" in readme_text
     assert "/g1/head_rgbd/points" in readme_text
     assert "/cmd_vel" in readme_text
-    assert "/g1/policy_cmd_debug" in readme_text
-    assert "/g1/cmd_vel_debug_markers" in readme_text
+    assert "/g1/policy_cmd_debug" not in readme_text
+    assert "/g1/cmd_vel_debug_markers" not in readme_text
 
 
 def test_v1_acceptance_notes_document_sim_commands_and_blockers():
@@ -378,6 +381,18 @@ def test_v1_acceptance_notes_document_sim_commands_and_blockers():
     assert "rt/run_command/cmd" in acceptance_text
     assert "blocked" not in acceptance_text.lower()
     assert "PointCloud2" not in acceptance_text
+
+
+def test_v1_howto_records_issue_log_and_v15_handoff():
+    howto_text = (PACKAGE_ROOT / "docs" / "v1_howto.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Issue Log" in howto_text
+    assert "RotationShimController" in howto_text
+    assert "Static Map Generation and Alignment" in howto_text
+    assert "RViz G1 Command Debug Overlay" in howto_text
+    assert "V1.5 Preparation" in howto_text
 
 
 def test_default_static_map_is_packaged_for_humanoid_navigation():

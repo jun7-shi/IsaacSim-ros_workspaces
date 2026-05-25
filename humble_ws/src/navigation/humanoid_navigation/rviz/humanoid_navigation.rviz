@@ -47,11 +47,6 @@ Visualization Manager:
       Name: Global Plan
       Topic:
         Value: /plan
-    - Class: rviz_default_plugins/MarkerArray
-      Enabled: true
-      Name: G1 Command Debug
-      Topic:
-        Value: /g1/cmd_vel_debug_markers
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48

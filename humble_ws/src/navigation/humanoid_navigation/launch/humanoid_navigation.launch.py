@@ -105,13 +105,6 @@ def _launch_setup(context):
         output="screen",
         parameters=[_adapter_parameters(profile)],
     )
-    g1_cmd_vel_debug = Node(
-        package="humanoid_navigation",
-        executable="g1_cmd_vel_debug_visualizer",
-        name="g1_cmd_vel_debug_visualizer",
-        output="screen",
-        parameters=[_cmd_vel_debug_parameters(profile)],
-    )
 
     return [
         map_server,
@@ -119,7 +112,6 @@ def _launch_setup(context):
         nav2_navigation,
         rviz_launch,
         g1_adapter,
-        g1_cmd_vel_debug,
     ]
 
 
@@ -283,17 +275,3 @@ def _adapter_parameters(profile):
         "policy_max_vel_theta": policy_command.get("max_vel_theta", 1.57),
         "policy_min_abs_vel_theta": policy_command.get("min_abs_vel_theta", 0.0),
     }
-
-
-def _cmd_vel_debug_parameters(profile):
-    params = _adapter_parameters(profile)
-    params.update(
-        {
-            "debug_marker_topic": "/g1/cmd_vel_debug_markers",
-            "policy_command_debug_topic": "/g1/policy_cmd_debug",
-            "debug_frame_id": profile["frames"]["base"],
-            "debug_publish_rate_hz": 10.0,
-            "marker_vector_scale": 1.0,
-        }
-    )
-    return params

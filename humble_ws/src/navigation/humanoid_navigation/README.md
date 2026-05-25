@@ -112,8 +112,6 @@ The global pose comes from the simulator TF chain. Send goals with RViz
 - Unitree sim UDP command bridge: `127.0.0.1:18080`, writing the existing
   Wholebody run command channel. DDS `rt/run_command/cmd` remains an optional
   legacy transport but is not the V1 default.
-- Command diagnostics: `/g1/cmd_vel_debug_markers` for RViz arrows and
-  `/g1/policy_cmd_debug` for the adapter-equivalent policy command vector.
 
 V1.5 perception modes additionally require RGBD point cloud
 `/g1/head_rgbd/points`.
@@ -138,14 +136,6 @@ When launching Isaac Sim for this project, use the conda environment `unitree_si
 
 ## Command Direction Diagnostics
 
-`humanoid_navigation.launch.py` starts `g1_cmd_vel_debug_visualizer` alongside
-the G1 adapter. RViz displays `/g1/cmd_vel_debug_markers` by default:
-
-- Green arrow: Nav2 `Twist` direction from `/cmd_vel`.
-- Yellow arrow: adapter-equivalent G1 policy direction after clipping and
-  Unitree axis conversion.
-- Text marker: numeric `vx`, `vy`, and `wz` values for both layers.
-
 The G1 profile applies a small yaw floor only for rotate-in-place commands so
 controller outputs below the locomotion policy deadband still produce visible
 turning. Forward path-following commands are not yaw-boosted.
@@ -153,7 +143,7 @@ turning. Forward path-following commands are not yaw-boosted.
 Record the relevant command and pose topics while sending a goal:
 
 ```bash
-ros2 bag record /cmd_vel /cmd_vel_nav /g1/policy_cmd_debug /odom /tf
+ros2 bag record /cmd_vel /cmd_vel_nav /odom /tf
 ```
 
 ## Notes
@@ -161,3 +151,6 @@ ros2 bag record /cmd_vel /cmd_vel_nav /g1/policy_cmd_debug /odom /tf
 V1.0 uses a static global map and does not perform dynamic obstacle avoidance.
 V1.5 adds local costmap updates from RGBD observations. Neither mode saves or
 modifies the static map file.
+
+For the V1 bringup issue log, failed attempts, accepted solutions, and V1.5
+handoff notes, see `docs/v1_howto.md`.
