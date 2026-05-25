@@ -41,6 +41,13 @@ conda run -n unitree_sim_lab python sim_main.py \
   --disable_image_server
 ```
 
+For GUI runs, `--nav_minimal_dds` skips the original Unitree RGB camera
+observation-manager update and throttles the action provider's manual render to
+every 4 provider ticks by default. Add `--nav_action_render_interval 1` only
+when you need every GUI frame during debugging. For fastest V1 static-map runs
+without a GUI, add `--no_render`; do not use `--no_render` with the V1.5
+PointCloud2 bridge.
+
 Start Nav2 and RViz:
 
 ```bash
@@ -286,6 +293,34 @@ Final V1 solution:
 
 - `setup.py` filters package data with `Path(path).is_file()`.
 - Generated debug outputs should remain untracked.
+
+### 11. Isaac Sim V1 Performance
+
+Problem:
+
+- A single GUI Kitchen env was only running around 5-6 FPS before adding the
+  head depth sensor.
+
+Root-cause evidence:
+
+- The V1 launch already used `--nav_minimal_dds`, so the broad hand/reward DDS
+  publishers were not the main remaining cost.
+- The Wholebody action provider still called `env.sim.render()` every provider
+  tick in GUI mode.
+- It also called `env.observation_manager.compute()` even though V1 static-map
+  navigation does not consume the original RGB camera observation. The Kitchen
+  G1 task defines front/wrist cameras, so this was camera work even before the
+  new D435 depth path.
+
+Final V1 solution:
+
+- `--nav_minimal_dds` skips original action-provider observation-manager
+  updates.
+- GUI `--nav_minimal_dds` throttles manual action-provider rendering to every
+  4 provider ticks by default.
+- `--nav_action_render_interval N` can override the GUI throttle.
+- `--enable_nav_ros_pointcloud` keeps every-tick rendering because the ROS
+  PointCloud2 graph depends on render-product updates.
 
 ## V1 Acceptance Checklist
 
