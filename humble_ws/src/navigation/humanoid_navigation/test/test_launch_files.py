@@ -30,14 +30,18 @@ def test_nav2_params_define_required_servers_and_costmaps():
 def test_nav2_defaults_use_static_map_path_follower_for_v1():
     params = load_yaml("config/nav2_params.yaml")
     follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
+    goal_checker = params["controller_server"]["ros__parameters"][
+        "stopped_goal_checker"
+    ]
 
     assert (
         follow_path["plugin"]
         == "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
     )
     assert follow_path["use_collision_detection"] is False
-    assert follow_path["use_rotate_to_heading"] is True
+    assert follow_path["use_rotate_to_heading"] is False
     assert follow_path["allow_reversing"] is False
+    assert goal_checker["yaw_goal_tolerance"] >= 3.0
 
 
 def test_g1_static_controller_counts_rotation_as_progress():
