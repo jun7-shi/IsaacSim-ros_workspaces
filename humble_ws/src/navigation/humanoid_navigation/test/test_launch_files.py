@@ -243,6 +243,26 @@ def test_g1_profile_defines_depth_image_converter_contract():
     assert perception["voxel_point_stride"] >= 4
 
 
+def test_g1_static_self_filter_covers_measured_near_body_points():
+    profile = load_yaml("profiles/g1.yaml")
+    boxes = profile["perception"]["self_filter_boxes_base"]
+    point = (0.36, 0.0, 0.10)
+
+    assert any(
+        min_x <= point[0] <= max_x
+        and min_y <= point[1] <= max_y
+        and min_z <= point[2] <= max_z
+        for min_x, min_y, min_z, max_x, max_y, max_z in zip(
+            boxes[0::6],
+            boxes[1::6],
+            boxes[2::6],
+            boxes[3::6],
+            boxes[4::6],
+            boxes[5::6],
+        )
+    )
+
+
 def test_sim_ground_truth_localization_params_document_required_frames():
     params = load_yaml("params/localization_sim_ground_truth.yaml")
 
