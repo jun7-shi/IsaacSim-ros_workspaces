@@ -146,12 +146,16 @@ def test_obstacle_2d_mode_uses_pointcloud_obstacle_layer():
     params = load_yaml("params/perception_2d_obstacle.yaml")
     local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
     obstacle_layer = local_params["rgbd_obstacle_layer"]
+    follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
 
     assert "rgbd_obstacle_layer" in local_params["plugins"]
     assert obstacle_layer["plugin"] == "nav2_costmap_2d::ObstacleLayer"
     assert obstacle_layer["pointcloud"]["data_type"] == "PointCloud2"
     assert obstacle_layer["pointcloud"]["marking"] is True
     assert obstacle_layer["pointcloud"]["clearing"] is True
+    assert follow_path["use_collision_detection"] is True
+    assert follow_path["use_regulated_linear_velocity_scaling"] is True
+    assert follow_path["use_cost_regulated_linear_velocity_scaling"] is True
 
 
 def test_static_only_mode_uses_no_sensor_obstacle_layer():
@@ -169,6 +173,7 @@ def test_voxel_3d_mode_uses_voxel_layer():
     params = load_yaml("params/perception_3d_voxel.yaml")
     local_params = params["local_costmap"]["local_costmap"]["ros__parameters"]
     voxel_layer = local_params["rgbd_voxel_layer"]
+    follow_path = params["controller_server"]["ros__parameters"]["FollowPath"]
 
     assert "rgbd_voxel_layer" in local_params["plugins"]
     assert voxel_layer["plugin"] == "nav2_costmap_2d::VoxelLayer"
@@ -176,6 +181,9 @@ def test_voxel_3d_mode_uses_voxel_layer():
     assert voxel_layer["pointcloud"]["topic"] == "/g1/head_rgbd/points"
     assert voxel_layer["pointcloud"]["marking"] is True
     assert voxel_layer["pointcloud"]["clearing"] is True
+    assert follow_path["use_collision_detection"] is True
+    assert follow_path["use_regulated_linear_velocity_scaling"] is True
+    assert follow_path["use_cost_regulated_linear_velocity_scaling"] is True
 
 
 def test_voxel_3d_launch_starts_depth_image_pointcloud_converter():
@@ -339,7 +347,9 @@ def test_rviz_config_uses_map_fixed_frame_and_navigation_displays():
     assert "Fixed Frame: map" in rviz_text
     assert "/map" in rviz_text
     assert "/g1/head_rgbd/points" in rviz_text
+    assert "Name: Front RGBD PointCloud" in rviz_text
     assert "/local_costmap/costmap" in rviz_text
+    assert "Name: Local Costmap" in rviz_text
     assert "/global_costmap/costmap" in rviz_text
     assert "/plan" in rviz_text
     assert "/g1/cmd_vel_debug_markers" not in rviz_text

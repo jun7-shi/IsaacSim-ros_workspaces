@@ -26,13 +26,18 @@ Visualization Manager:
       Enabled: false
       Name: Robot Footprint
     - Class: rviz_default_plugins/PointCloud2
-      Enabled: false
-      Name: Head RGBD PointCloud
+      Alpha: 0.7
+      Color: 80; 180; 255
+      Color Transformer: FlatColor
+      Enabled: true
+      Name: Front RGBD PointCloud
+      Size (m): 0.03
+      Style: Boxes
       Topic:
         Value: /g1/head_rgbd/points
     - Class: rviz_default_plugins/Map
-      Alpha: 0.45
-      Enabled: false
+      Alpha: 0.65
+      Enabled: true
       Name: Local Costmap
       Topic:
         Value: /local_costmap/costmap
