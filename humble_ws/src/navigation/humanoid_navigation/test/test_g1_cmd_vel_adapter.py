@@ -134,6 +134,20 @@ def test_converter_boosts_yaw_while_following_path_forward():
     ]
 
 
+def test_converter_boosts_forward_velocity_above_policy_deadband():
+    converter = CommandConverter(
+        AdapterConfig(
+            max_vel_x=1.0,
+            policy_max_vel_x=1.0,
+            policy_min_abs_vel_x=0.3,
+            default_height=0.8,
+        )
+    )
+
+    assert converter.to_command(make_twist(x=0.12)) == [0.3, 0.0, 0.0, 0.8]
+    assert converter.to_command(make_twist(x=-0.12)) == [-0.3, 0.0, 0.0, 0.8]
+
+
 def test_converter_zero_command_uses_default_height():
     converter = CommandConverter(AdapterConfig(default_height=0.8))
 

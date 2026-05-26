@@ -161,6 +161,7 @@ motion:
 policy_command:
   min_vel_x: -0.6
   max_vel_x: 1.0
+  min_abs_vel_x: 0.3
   max_vel_y: 0.5
   max_vel_theta: 1.57
   min_abs_vel_theta: 1.0

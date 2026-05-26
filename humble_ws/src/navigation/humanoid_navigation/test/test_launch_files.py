@@ -78,6 +78,7 @@ def test_g1_profile_keeps_policy_command_range_as_safety_clamp():
 
     assert policy_command["min_vel_x"] == -0.6
     assert policy_command["max_vel_x"] == 1.0
+    assert policy_command["min_abs_vel_x"] >= 0.2
     assert policy_command["max_vel_theta"] == 1.57
     assert policy_command["min_abs_vel_theta"] >= 0.2
 
@@ -153,6 +154,7 @@ def test_obstacle_2d_mode_uses_pointcloud_obstacle_layer():
     assert obstacle_layer["pointcloud"]["data_type"] == "PointCloud2"
     assert obstacle_layer["pointcloud"]["marking"] is True
     assert obstacle_layer["pointcloud"]["clearing"] is True
+    assert local_params["inflation_layer"]["inflation_radius"] == 0.3
     assert follow_path["use_collision_detection"] is True
     assert follow_path["use_regulated_linear_velocity_scaling"] is True
     assert follow_path["use_cost_regulated_linear_velocity_scaling"] is True
@@ -181,6 +183,7 @@ def test_voxel_3d_mode_uses_voxel_layer():
     assert voxel_layer["pointcloud"]["topic"] == "/g1/head_rgbd/points"
     assert voxel_layer["pointcloud"]["marking"] is True
     assert voxel_layer["pointcloud"]["clearing"] is True
+    assert local_params["inflation_layer"]["inflation_radius"] == 0.3
     assert follow_path["use_collision_detection"] is True
     assert follow_path["use_regulated_linear_velocity_scaling"] is True
     assert follow_path["use_cost_regulated_linear_velocity_scaling"] is True

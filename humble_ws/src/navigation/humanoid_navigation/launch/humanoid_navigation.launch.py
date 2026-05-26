@@ -369,6 +369,7 @@ def _adapter_parameters(profile):
         "max_vel_theta": motion["max_vel_theta"],
         "policy_min_vel_x": policy_command.get("min_vel_x", -0.6),
         "policy_max_vel_x": policy_command.get("max_vel_x", 1.0),
+        "policy_min_abs_vel_x": policy_command.get("min_abs_vel_x", 0.0),
         "policy_max_vel_y": policy_command.get("max_vel_y", 0.5),
         "policy_max_vel_theta": policy_command.get("max_vel_theta", 1.57),
         "policy_min_abs_vel_theta": policy_command.get("min_abs_vel_theta", 0.0),
