@@ -320,6 +320,22 @@ def _perception_converter_nodes(profile, perception_mode):
                             "self_filter_boxes_base",
                             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                         ),
+                        "self_filter_dynamic_root_frame": perception.get(
+                            "self_filter_dynamic_root_frame",
+                            profile["frames"]["base"],
+                        ),
+                        "self_filter_link_frames": perception.get(
+                            "self_filter_link_frames",
+                            [""],
+                        ),
+                        "self_filter_link_boxes": perception.get(
+                            "self_filter_link_boxes",
+                            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        ),
+                        "self_filter_tf_timeout_sec": perception.get(
+                            "self_filter_tf_timeout_sec",
+                            0.0,
+                        ),
                     }
                 ],
             )

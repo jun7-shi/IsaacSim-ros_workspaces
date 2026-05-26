@@ -1,5 +1,6 @@
 from humanoid_navigation.depth_image_to_pointcloud import (
     DepthProjectionConfig,
+    SelfFilterFrameBox,
     camera_info_intrinsics,
     project_depth_to_points,
 )
@@ -90,3 +91,33 @@ def test_project_depth_to_points_filters_robot_self_boxes_in_base_frame():
         (2.0, 0.0, 2.0),
         (6.0, 0.0, 3.0),
     ]
+
+
+def test_project_depth_to_points_filters_robot_self_boxes_in_dynamic_link_frame():
+    depth_m = [1.0, 2.0]
+    intrinsics = camera_info_intrinsics(
+        width=2,
+        height=1,
+        k=[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    )
+
+    points = project_depth_to_points(
+        depth_m,
+        intrinsics,
+        DepthProjectionConfig(
+            stride=1,
+            min_depth_m=0.5,
+            max_depth_m=4.0,
+            self_filter_enabled=True,
+            self_filter_frame_boxes=(
+                SelfFilterFrameBox(
+                    frame_id="left_wrist_yaw_link",
+                    frame_xyz=(1.0, 0.0, 0.0),
+                    frame_xyzw=(0.0, 0.0, 0.0, 1.0),
+                    bounds=(0.9, -0.1, 0.9, 1.1, 0.1, 1.1),
+                ),
+            ),
+        ),
+    )
+
+    assert points == [(2.0, 0.0, 2.0)]

@@ -147,6 +147,13 @@ boxes that remove nearby torso/chest/arm points from the camera cloud before
 they reach the local costmap. Tune `self_filter_boxes_base` there if the filter
 removes too much or too little in a new policy posture.
 
+For moving arms, the same converter can also consume dynamic TF/FK link poses.
+`self_filter_link_frames` and `self_filter_link_boxes` define link-local
+exclusion boxes for the G1 arm links, while `self_filter_dynamic_root_frame`
+selects the TF root published by Isaac Sim for those links. The Unitree bridge
+must be started with the self-filter TF bridge so transforms such as
+`pelvis -> left_wrist_yaw_link` are available at the depth image timestamp.
+
 ## G1 Simulation Resources
 
 Use `/data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab/` as the source of truth for G1 simulation assets, policy command behavior, DDS examples, and Isaac Lab integration details.

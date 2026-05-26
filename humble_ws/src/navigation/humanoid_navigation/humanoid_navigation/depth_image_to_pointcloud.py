@@ -23,6 +23,15 @@ class DepthProjectionConfig:
     self_filter_camera_xyz: tuple[float, float, float] = (0.0, 0.0, 0.0)
     self_filter_camera_xyzw: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
     self_filter_boxes_base: tuple[float, ...] = ()
+    self_filter_frame_boxes: tuple["SelfFilterFrameBox", ...] = ()
+
+
+@dataclass(frozen=True)
+class SelfFilterFrameBox:
+    frame_id: str
+    frame_xyz: tuple[float, float, float]
+    frame_xyzw: tuple[float, float, float, float]
+    bounds: tuple[float, float, float, float, float, float]
 
 
 def camera_info_intrinsics(
@@ -79,28 +88,54 @@ def _is_self_filtered_point(
 ) -> bool:
     if not config.self_filter_enabled:
         return False
-    if not config.self_filter_boxes_base:
-        return False
-    if len(config.self_filter_boxes_base) % 6 != 0:
-        raise ValueError("self_filter_boxes_base must contain 6 floats per box")
 
-    point_base = _transform_point(
-        point_camera,
-        config.self_filter_camera_xyz,
-        config.self_filter_camera_xyzw,
-    )
-    boxes = config.self_filter_boxes_base
+    if config.self_filter_boxes_base:
+        if len(config.self_filter_boxes_base) % 6 != 0:
+            raise ValueError("self_filter_boxes_base must contain 6 floats per box")
+        point_base = _transform_point(
+            point_camera,
+            config.self_filter_camera_xyz,
+            config.self_filter_camera_xyzw,
+        )
+        if _is_point_inside_flat_boxes(point_base, config.self_filter_boxes_base):
+            return True
+
+    for frame_box in config.self_filter_frame_boxes:
+        point_frame = _transform_point(
+            point_camera,
+            frame_box.frame_xyz,
+            frame_box.frame_xyzw,
+        )
+        if _is_point_inside_bounds(point_frame, frame_box.bounds):
+            return True
+
+    return False
+
+
+def _is_point_inside_flat_boxes(
+    point: tuple[float, float, float],
+    boxes: Sequence[float],
+) -> bool:
     for index in range(0, len(boxes), 6):
-        min_x, min_y, min_z, max_x, max_y, max_z = boxes[index : index + 6]
-        if min_x > max_x or min_y > max_y or min_z > max_z:
-            raise ValueError("self_filter_boxes_base min values must be <= max values")
-        if (
-            min_x <= point_base[0] <= max_x
-            and min_y <= point_base[1] <= max_y
-            and min_z <= point_base[2] <= max_z
-        ):
+        if _is_point_inside_bounds(point, boxes[index : index + 6]):
             return True
     return False
+
+
+def _is_point_inside_bounds(
+    point: tuple[float, float, float],
+    bounds: Sequence[float],
+) -> bool:
+    if len(bounds) != 6:
+        raise ValueError("self filter box bounds must contain exactly 6 floats")
+    min_x, min_y, min_z, max_x, max_y, max_z = bounds
+    if min_x > max_x or min_y > max_y or min_z > max_z:
+        raise ValueError("self filter box min values must be <= max values")
+    return (
+        min_x <= point[0] <= max_x
+        and min_y <= point[1] <= max_y
+        and min_z <= point[2] <= max_z
+    )
 
 
 def _transform_point(
@@ -116,15 +151,44 @@ def _transform_point(
     )
 
 
+def _compose_transform_xyzw(
+    first_xyz: Sequence[float],
+    first_xyzw: Sequence[float],
+    second_xyz: Sequence[float],
+    second_xyzw: Sequence[float],
+) -> tuple[tuple[float, float, float], tuple[float, float, float, float]]:
+    rotated_second_xyz = _rotate_point_xyzw(
+        (float(second_xyz[0]), float(second_xyz[1]), float(second_xyz[2])),
+        first_xyzw,
+    )
+    xyz = (
+        rotated_second_xyz[0] + float(first_xyz[0]),
+        rotated_second_xyz[1] + float(first_xyz[1]),
+        rotated_second_xyz[2] + float(first_xyz[2]),
+    )
+    xyzw = _multiply_quat_xyzw(first_xyzw, second_xyzw)
+    return xyz, xyzw
+
+
+def _multiply_quat_xyzw(
+    first_xyzw: Sequence[float],
+    second_xyzw: Sequence[float],
+) -> tuple[float, float, float, float]:
+    ax, ay, az, aw = _normalize_quat_xyzw(first_xyzw)
+    bx, by, bz, bw = _normalize_quat_xyzw(second_xyzw)
+    return (
+        aw * bx + ax * bw + ay * bz - az * by,
+        aw * by - ax * bz + ay * bw + az * bx,
+        aw * bz + ax * by - ay * bx + az * bw,
+        aw * bw - ax * bx - ay * by - az * bz,
+    )
+
+
 def _rotate_point_xyzw(
     point: tuple[float, float, float],
     rotation_xyzw: Sequence[float],
 ) -> tuple[float, float, float]:
-    x, y, z, w = (float(value) for value in rotation_xyzw)
-    norm = math.sqrt(x * x + y * y + z * z + w * w)
-    if norm == 0.0:
-        raise ValueError("self_filter_camera_xyzw must not be a zero quaternion")
-    x, y, z, w = x / norm, y / norm, z / norm, w / norm
+    x, y, z, w = _normalize_quat_xyzw(rotation_xyzw)
 
     px, py, pz = point
     tx = 2.0 * (y * pz - z * py)
@@ -135,6 +199,16 @@ def _rotate_point_xyzw(
         py + w * ty + (z * tx - x * tz),
         pz + w * tz + (x * ty - y * tx),
     )
+
+
+def _normalize_quat_xyzw(
+    rotation_xyzw: Sequence[float],
+) -> tuple[float, float, float, float]:
+    x, y, z, w = (float(value) for value in rotation_xyzw)
+    norm = math.sqrt(x * x + y * y + z * z + w * w)
+    if norm == 0.0:
+        raise ValueError("self_filter_camera_xyzw must not be a zero quaternion")
+    return x / norm, y / norm, z / norm, w / norm
 
 
 def decode_depth_image_meters(
@@ -175,12 +249,33 @@ def pack_xyz_points(points: Iterable[tuple[float, float, float]]) -> bytes:
     return bytes(payload)
 
 
+def _transform_msg_to_xyzw(transform):
+    translation = transform.translation
+    rotation = transform.rotation
+    return (
+        (
+            float(translation.x),
+            float(translation.y),
+            float(translation.z),
+        ),
+        (
+            float(rotation.x),
+            float(rotation.y),
+            float(rotation.z),
+            float(rotation.w),
+        ),
+    )
+
+
 class DepthImageToPointCloudNode:
     def __init__(self):
         import rclpy
+        from rclpy.duration import Duration
+        from rclpy.time import Time
         from rclpy.node import Node
         from rclpy.qos import qos_profile_sensor_data
         from sensor_msgs.msg import CameraInfo, Image, PointCloud2
+        from tf2_ros import Buffer, TransformListener
 
         class _Node(Node):
             pass
@@ -188,6 +283,10 @@ class DepthImageToPointCloudNode:
         self.node = _Node("depth_image_to_pointcloud")
         self._camera_info: CameraInfo | None = None
         self._pointcloud_type = PointCloud2
+        self._tf_buffer = Buffer()
+        self._tf_listener = TransformListener(self._tf_buffer, self.node)
+        self._Duration = Duration
+        self._Time = Time
         self._declare_parameters()
 
         depth_topic = self.node.get_parameter("depth_topic").value
@@ -234,6 +333,10 @@ class DepthImageToPointCloudNode:
         self.node.declare_parameter("self_filter_camera_xyz", [0.0, 0.0, 0.0])
         self.node.declare_parameter("self_filter_camera_xyzw", [0.0, 0.0, 0.0, 1.0])
         self.node.declare_parameter("self_filter_boxes_base", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.node.declare_parameter("self_filter_dynamic_root_frame", "base_link")
+        self.node.declare_parameter("self_filter_link_frames", [""])
+        self.node.declare_parameter("self_filter_link_boxes", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.node.declare_parameter("self_filter_tf_timeout_sec", 0.0)
 
     def _on_camera_info(self, msg):
         self._camera_info = msg
@@ -283,6 +386,9 @@ class DepthImageToPointCloudNode:
                         float(value)
                         for value in self.node.get_parameter("self_filter_boxes_base").value
                     ),
+                    self_filter_frame_boxes=self._lookup_self_filter_frame_boxes(
+                        msg.header
+                    ),
                 ),
             )
         except Exception as exc:
@@ -290,6 +396,84 @@ class DepthImageToPointCloudNode:
             return
 
         self.publisher.publish(self._make_pointcloud(msg.header, points))
+
+    def _lookup_self_filter_frame_boxes(self, header):
+        if not bool(self.node.get_parameter("self_filter_enabled").value):
+            return ()
+
+        link_frames = tuple(
+            str(frame)
+            for frame in self.node.get_parameter("self_filter_link_frames").value
+            if str(frame)
+        )
+        if not link_frames:
+            return ()
+
+        flat_boxes = tuple(
+            float(value)
+            for value in self.node.get_parameter("self_filter_link_boxes").value
+        )
+        if len(flat_boxes) != len(link_frames) * 6:
+            raise ValueError(
+                "self_filter_link_boxes must contain 6 floats per link frame"
+            )
+
+        root_frame = str(
+            self.node.get_parameter("self_filter_dynamic_root_frame").value
+        )
+        if not root_frame:
+            raise ValueError("self_filter_dynamic_root_frame must not be empty")
+
+        camera_xyz = tuple(
+            float(value)
+            for value in self.node.get_parameter("self_filter_camera_xyz").value
+        )
+        camera_xyzw = tuple(
+            float(value)
+            for value in self.node.get_parameter("self_filter_camera_xyzw").value
+        )
+        stamp = self._Time.from_msg(header.stamp)
+        timeout = self._Duration(
+            seconds=float(self.node.get_parameter("self_filter_tf_timeout_sec").value)
+        )
+
+        frame_boxes: list[SelfFilterFrameBox] = []
+        for index, link_frame in enumerate(link_frames):
+            try:
+                transform = self._tf_buffer.lookup_transform(
+                    link_frame,
+                    root_frame,
+                    stamp,
+                    timeout,
+                )
+            except Exception as exc:
+                self.node.get_logger().warn(
+                    (
+                        "missing dynamic self-filter TF "
+                        f"{root_frame}->{link_frame}: {exc}"
+                    ),
+                    throttle_duration_sec=5.0,
+                )
+                continue
+
+            link_root_xyz, link_root_xyzw = _transform_msg_to_xyzw(transform.transform)
+            link_camera_xyz, link_camera_xyzw = _compose_transform_xyzw(
+                link_root_xyz,
+                link_root_xyzw,
+                camera_xyz,
+                camera_xyzw,
+            )
+            bounds = flat_boxes[index * 6 : (index + 1) * 6]
+            frame_boxes.append(
+                SelfFilterFrameBox(
+                    frame_id=link_frame,
+                    frame_xyz=link_camera_xyz,
+                    frame_xyzw=link_camera_xyzw,
+                    bounds=bounds,
+                )
+            )
+
+        return tuple(frame_boxes)
 
     def _make_pointcloud(self, header, points):
         from sensor_msgs.msg import PointCloud2, PointField
