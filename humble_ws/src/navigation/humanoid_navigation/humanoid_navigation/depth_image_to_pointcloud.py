@@ -24,6 +24,7 @@ class DepthProjectionConfig:
     self_filter_camera_xyzw: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
     self_filter_boxes_base: tuple[float, ...] = ()
     self_filter_frame_boxes: tuple["SelfFilterFrameBox", ...] = ()
+    self_filter_box_margin_m: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -88,6 +89,8 @@ def _is_self_filtered_point(
 ) -> bool:
     if not config.self_filter_enabled:
         return False
+    if config.self_filter_box_margin_m < 0.0:
+        raise ValueError("self_filter_box_margin_m must be >= 0")
 
     if config.self_filter_boxes_base:
         if len(config.self_filter_boxes_base) % 6 != 0:
@@ -97,7 +100,11 @@ def _is_self_filtered_point(
             config.self_filter_camera_xyz,
             config.self_filter_camera_xyzw,
         )
-        if _is_point_inside_flat_boxes(point_base, config.self_filter_boxes_base):
+        if _is_point_inside_flat_boxes(
+            point_base,
+            config.self_filter_boxes_base,
+            config.self_filter_box_margin_m,
+        ):
             return True
 
     for frame_box in config.self_filter_frame_boxes:
@@ -106,7 +113,11 @@ def _is_self_filtered_point(
             frame_box.frame_xyz,
             frame_box.frame_xyzw,
         )
-        if _is_point_inside_bounds(point_frame, frame_box.bounds):
+        if _is_point_inside_bounds(
+            point_frame,
+            frame_box.bounds,
+            config.self_filter_box_margin_m,
+        ):
             return True
 
     return False
@@ -115,9 +126,10 @@ def _is_self_filtered_point(
 def _is_point_inside_flat_boxes(
     point: tuple[float, float, float],
     boxes: Sequence[float],
+    margin_m: float = 0.0,
 ) -> bool:
     for index in range(0, len(boxes), 6):
-        if _is_point_inside_bounds(point, boxes[index : index + 6]):
+        if _is_point_inside_bounds(point, boxes[index : index + 6], margin_m):
             return True
     return False
 
@@ -125,16 +137,19 @@ def _is_point_inside_flat_boxes(
 def _is_point_inside_bounds(
     point: tuple[float, float, float],
     bounds: Sequence[float],
+    margin_m: float = 0.0,
 ) -> bool:
     if len(bounds) != 6:
         raise ValueError("self filter box bounds must contain exactly 6 floats")
+    if margin_m < 0.0:
+        raise ValueError("self_filter_box_margin_m must be >= 0")
     min_x, min_y, min_z, max_x, max_y, max_z = bounds
     if min_x > max_x or min_y > max_y or min_z > max_z:
         raise ValueError("self filter box min values must be <= max values")
     return (
-        min_x <= point[0] <= max_x
-        and min_y <= point[1] <= max_y
-        and min_z <= point[2] <= max_z
+        min_x - margin_m <= point[0] <= max_x + margin_m
+        and min_y - margin_m <= point[1] <= max_y + margin_m
+        and min_z - margin_m <= point[2] <= max_z + margin_m
     )
 
 
@@ -337,6 +352,7 @@ class DepthImageToPointCloudNode:
         self.node.declare_parameter("self_filter_link_frames", [""])
         self.node.declare_parameter("self_filter_link_boxes", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.node.declare_parameter("self_filter_tf_timeout_sec", 0.0)
+        self.node.declare_parameter("self_filter_box_margin_m", 0.0)
 
     def _on_camera_info(self, msg):
         self._camera_info = msg
@@ -385,6 +401,9 @@ class DepthImageToPointCloudNode:
                     self_filter_boxes_base=tuple(
                         float(value)
                         for value in self.node.get_parameter("self_filter_boxes_base").value
+                    ),
+                    self_filter_box_margin_m=float(
+                        self.node.get_parameter("self_filter_box_margin_m").value
                     ),
                     self_filter_frame_boxes=self._lookup_self_filter_frame_boxes(
                         msg.header

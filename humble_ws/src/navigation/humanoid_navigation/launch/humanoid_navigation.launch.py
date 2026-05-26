@@ -336,6 +336,10 @@ def _perception_converter_nodes(profile, perception_mode):
                             "self_filter_tf_timeout_sec",
                             0.0,
                         ),
+                        "self_filter_box_margin_m": perception.get(
+                            "self_filter_box_margin_m",
+                            0.0,
+                        ),
                     }
                 ],
             )
