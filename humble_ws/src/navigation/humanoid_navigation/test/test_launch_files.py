@@ -448,6 +448,18 @@ def test_default_static_map_is_packaged_for_humanoid_navigation():
     assert map_image.exists()
 
 
+def test_kitchen_static_map_uses_selected_prims_export():
+    map_yaml = load_yaml("maps/kitchen_g1_nav_map.yaml")
+    map_image = PACKAGE_ROOT / "maps" / map_yaml["image"]
+
+    assert map_yaml["image"] == "kitchen_g1_nav_map.pgm"
+    assert map_yaml["resolution"] == 0.05
+    assert map_yaml["origin"] == [-2.771971, -1.899846, 0.0]
+    assert map_yaml["occupied_thresh"] == 0.65
+    assert map_image.exists()
+    assert map_image.read_bytes().startswith(b"P5\n117 96\n255\n")
+
+
 def test_unitree_isaaclab_static_map_doc_explains_export_flow():
     doc_text = (
         PACKAGE_ROOT / "docs" / "unitree_isaaclab_static_map.md"
