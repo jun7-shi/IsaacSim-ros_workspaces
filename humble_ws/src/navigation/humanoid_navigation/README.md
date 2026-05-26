@@ -137,8 +137,8 @@ V1.5 perception modes require Isaac Sim RGBD image topics
 `depth_image_to_pointcloud` in `obstacle_2d` and `voxel_3d` modes; that node
 downsamples the depth image locally and publishes `/g1/head_rgbd/points` for
 Nav2 `ObstacleLayer` or `VoxelLayer`. The same launch starts a configurable
-static `base_link -> g1_head_d435_depth_optical_frame` TF from `profiles/g1.yaml`;
-update `camera_xyz` and `camera_xyzw` there after measuring the exact G1 camera
+static `base_link -> g1_front_rgbd_optical_frame` TF from `profiles/g1.yaml`;
+`camera_xyz` and `camera_xyzw` there are initialized from the G1 neutral-pose
 extrinsic.
 
 ## G1 Simulation Resources

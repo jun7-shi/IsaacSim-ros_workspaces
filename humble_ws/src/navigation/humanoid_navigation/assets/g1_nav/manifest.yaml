@@ -2,7 +2,7 @@ asset: g1_29dof_with_dex1_nav_depth.usd
 source_robot_asset: /data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd
 mount_link: d435_link
 camera_prim: /Robot/d435_link/front_cam
-camera_frame: g1_head_d435_depth_optical_frame
+camera_frame: g1_front_rgbd_optical_frame
 pointcloud_topic: /g1/head_rgbd/points
 depth_topic: /g1/head_rgbd/depth/image_raw
 rgb_topic: /g1/head_rgbd/rgb/image_raw

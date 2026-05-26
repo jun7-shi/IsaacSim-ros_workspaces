@@ -12,10 +12,10 @@ perception:
   depth_topic: /g1/head_rgbd/depth/image_raw
   camera_info_topic: /g1/head_rgbd/camera_info
   pointcloud_topic: /g1/head_rgbd/points
-  pointcloud_frame: g1_head_d435_depth_optical_frame
+  pointcloud_frame: g1_front_rgbd_optical_frame
   camera_parent_frame: base_link
-  camera_xyz: [0.20, 0.0, 0.45]
-  camera_xyzw: [-0.5, 0.5, -0.5, 0.5]
+  camera_xyz: [0.05366, 0.01753, 0.47387]
+  camera_xyzw: [-0.659252482, 0.659252482, -0.255707186, 0.255707186]
   voxel_point_stride: 8
   depth_scale: 0.001
   min_depth_m: 0.1

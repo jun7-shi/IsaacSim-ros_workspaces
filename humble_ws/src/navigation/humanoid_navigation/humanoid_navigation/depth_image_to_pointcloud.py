@@ -154,7 +154,7 @@ class DepthImageToPointCloudNode:
         self.node.declare_parameter("pointcloud_topic", "/g1/head_rgbd/points")
         self.node.declare_parameter(
             "pointcloud_frame",
-            "g1_head_d435_depth_optical_frame",
+            "g1_front_rgbd_optical_frame",
         )
         self.node.declare_parameter("stride", 8)
         self.node.declare_parameter("min_depth_m", 0.1)

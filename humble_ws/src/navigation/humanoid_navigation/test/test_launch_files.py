@@ -198,7 +198,7 @@ def test_voxel_3d_launch_publishes_camera_static_tf():
     )
 
     assert "static_transform_publisher" in launch_text
-    assert "g1_head_rgbd_static_tf" in launch_text
+    assert "g1_front_rgbd_static_tf" in launch_text
     assert "camera_parent_frame" in launch_text
     assert "camera_xyz" in launch_text
     assert "camera_xyzw" in launch_text
@@ -212,10 +212,15 @@ def test_g1_profile_defines_depth_image_converter_contract():
     assert perception["rgb_topic"] == "/g1/head_rgbd/rgb/image_raw"
     assert perception["camera_info_topic"] == "/g1/head_rgbd/camera_info"
     assert perception["pointcloud_topic"] == "/g1/head_rgbd/points"
-    assert perception["pointcloud_frame"] == "g1_head_d435_depth_optical_frame"
+    assert perception["pointcloud_frame"] == "g1_front_rgbd_optical_frame"
     assert perception["camera_parent_frame"] == "base_link"
-    assert len(perception["camera_xyz"]) == 3
-    assert len(perception["camera_xyzw"]) == 4
+    assert perception["camera_xyz"] == [0.05366, 0.01753, 0.47387]
+    assert perception["camera_xyzw"] == [
+        -0.659252482,
+        0.659252482,
+        -0.255707186,
+        0.255707186,
+    ]
     assert perception["voxel_point_stride"] >= 4
 
 
@@ -504,6 +509,7 @@ def test_g1_nav_asset_manifest_documents_carter_map_reuse():
     assert manifest["asset"] == "g1_29dof_with_dex1_nav_depth.usd"
     assert manifest["mount_link"] == "d435_link"
     assert manifest["camera_prim"] == "/Robot/d435_link/front_cam"
+    assert manifest["camera_frame"] == "g1_front_rgbd_optical_frame"
     assert manifest["depth_topic"] == "/g1/head_rgbd/depth/image_raw"
     assert manifest["rgb_topic"] == "/g1/head_rgbd/rgb/image_raw"
     assert manifest["pointcloud_topic"] == "/g1/head_rgbd/points"

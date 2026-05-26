@@ -283,7 +283,7 @@ def _perception_converter_nodes(profile, perception_mode):
             Node(
                 package="tf2_ros",
                 executable="static_transform_publisher",
-                name="g1_head_rgbd_static_tf",
+                name="g1_front_rgbd_static_tf",
                 arguments=[
                     str(camera_xyz[0]),
                     str(camera_xyz[1]),
