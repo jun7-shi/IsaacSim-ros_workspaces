@@ -1,7 +1,7 @@
 #usda 1.0
 (
     defaultPrim = "Robot"
-    doc = "Navigation-specific G1 Dex1 USD layer. It references the Unitree wholebody Dex1 robot asset and marks the existing front_cam as the RGBD source for ROS2 navigation bridging."
+    doc = "Navigation-specific G1 Dex1 USD layer. It references the Unitree wholebody Dex1 robot asset; the navigation RGBD front_cam is spawned by IsaacLab CameraCfg at runtime."
     metersPerUnit = 1
     upAxis = "Z"
 )
@@ -10,15 +10,4 @@ def Xform "Robot" (
     prepend references = @/data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab/assets/robots/g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd@
 )
 {
-    over "d435_link"
-    {
-        over "front_cam"
-        {
-            custom string cameraRole = "navigation_rgbd"
-            custom string rosFrameId = "g1_head_d435_depth_optical_frame"
-            custom string rosDepthTopic = "/g1/head_rgbd/depth/image_raw"
-            custom string rosRgbTopic = "/g1/head_rgbd/rgb/image_raw"
-            float2 clippingRange = (0.05, 5)
-        }
-    }
 }
