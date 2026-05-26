@@ -198,6 +198,7 @@ def test_voxel_3d_launch_starts_depth_image_pointcloud_converter():
     assert "camera_info_topic" in launch_text
     assert "pointcloud_topic" in launch_text
     assert "voxel_point_stride" in launch_text
+    assert "self_filter_boxes_base" in launch_text
 
 
 def test_voxel_3d_launch_publishes_camera_static_tf():
@@ -229,6 +230,8 @@ def test_g1_profile_defines_depth_image_converter_contract():
         -0.255707186,
         0.255707186,
     ]
+    assert perception["self_filter_enabled"] is True
+    assert len(perception["self_filter_boxes_base"]) % 6 == 0
     assert perception["voxel_point_stride"] >= 4
 
 

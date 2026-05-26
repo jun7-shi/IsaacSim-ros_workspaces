@@ -141,6 +141,12 @@ static `base_link -> g1_front_rgbd_optical_frame` TF from `profiles/g1.yaml`;
 `camera_xyz` and `camera_xyzw` there are initialized from the G1 neutral-pose
 extrinsic.
 
+The depth converter also applies an optional robot self-filter before publishing
+`/g1/head_rgbd/points`. For G1, `profiles/g1.yaml` enables base-frame exclusion
+boxes that remove nearby torso/chest/arm points from the camera cloud before
+they reach the local costmap. Tune `self_filter_boxes_base` there if the filter
+removes too much or too little in a new policy posture.
+
 ## G1 Simulation Resources
 
 Use `/data/jun7.shi/code/poc/unitree/Manipulation/unitree_sim_isaaclab/` as the source of truth for G1 simulation assets, policy command behavior, DDS examples, and Isaac Lab integration details.

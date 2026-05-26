@@ -16,6 +16,20 @@ perception:
   camera_parent_frame: base_link
   camera_xyz: [0.05366, 0.01753, 0.47387]
   camera_xyzw: [-0.659252482, 0.659252482, -0.255707186, 0.255707186]
+  self_filter_enabled: true
+  self_filter_boxes_base:
+    - -0.35
+    - -0.30
+    - -0.20
+    - 0.30
+    - 0.30
+    - 0.85
+    - -0.10
+    - -0.65
+    - 0.20
+    - 0.80
+    - 0.65
+    - 1.05
   voxel_point_stride: 8
   depth_scale: 0.001
   min_depth_m: 0.1

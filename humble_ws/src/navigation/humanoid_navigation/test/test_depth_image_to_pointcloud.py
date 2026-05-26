@@ -62,3 +62,31 @@ def test_project_depth_to_points_filters_invalid_and_out_of_range_depth():
         (0.0, 1.0, 1.0),
         (1.5, 1.5, 1.5),
     ]
+
+
+def test_project_depth_to_points_filters_robot_self_boxes_in_base_frame():
+    depth_m = [1.0, 2.0, 3.0]
+    intrinsics = camera_info_intrinsics(
+        width=3,
+        height=1,
+        k=[1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+    )
+
+    points = project_depth_to_points(
+        depth_m,
+        intrinsics,
+        DepthProjectionConfig(
+            stride=1,
+            min_depth_m=0.5,
+            max_depth_m=4.0,
+            self_filter_enabled=True,
+            self_filter_camera_xyz=(1.0, 0.0, 0.0),
+            self_filter_camera_xyzw=(0.0, 0.0, 0.0, 1.0),
+            self_filter_boxes_base=(0.9, -0.1, 0.9, 1.1, 0.1, 1.1),
+        ),
+    )
+
+    assert points == [
+        (2.0, 0.0, 2.0),
+        (6.0, 0.0, 3.0),
+    ]

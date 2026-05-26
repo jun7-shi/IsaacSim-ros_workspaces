@@ -311,6 +311,15 @@ def _perception_converter_nodes(profile, perception_mode):
                         "min_depth_m": perception.get("min_depth_m", 0.1),
                         "max_depth_m": perception.get("obstacle_max_range", 4.0),
                         "depth_scale": perception.get("depth_scale", 0.001),
+                        "self_filter_enabled": perception.get(
+                            "self_filter_enabled", False
+                        ),
+                        "self_filter_camera_xyz": perception["camera_xyz"],
+                        "self_filter_camera_xyzw": perception["camera_xyzw"],
+                        "self_filter_boxes_base": perception.get(
+                            "self_filter_boxes_base",
+                            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                        ),
                     }
                 ],
             )

@@ -19,6 +19,10 @@ class DepthProjectionConfig:
     stride: int = 8
     min_depth_m: float = 0.1
     max_depth_m: float = 4.0
+    self_filter_enabled: bool = False
+    self_filter_camera_xyz: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    self_filter_camera_xyzw: tuple[float, float, float, float] = (0.0, 0.0, 0.0, 1.0)
+    self_filter_boxes_base: tuple[float, ...] = ()
 
 
 def camera_info_intrinsics(
@@ -63,8 +67,74 @@ def project_depth_to_points(
                 continue
             x = (u - intrinsics.cx) * z / intrinsics.fx
             y = (v - intrinsics.cy) * z / intrinsics.fy
+            if _is_self_filtered_point((x, y, z), config):
+                continue
             points.append((x, y, z))
     return points
+
+
+def _is_self_filtered_point(
+    point_camera: tuple[float, float, float],
+    config: DepthProjectionConfig,
+) -> bool:
+    if not config.self_filter_enabled:
+        return False
+    if not config.self_filter_boxes_base:
+        return False
+    if len(config.self_filter_boxes_base) % 6 != 0:
+        raise ValueError("self_filter_boxes_base must contain 6 floats per box")
+
+    point_base = _transform_point(
+        point_camera,
+        config.self_filter_camera_xyz,
+        config.self_filter_camera_xyzw,
+    )
+    boxes = config.self_filter_boxes_base
+    for index in range(0, len(boxes), 6):
+        min_x, min_y, min_z, max_x, max_y, max_z = boxes[index : index + 6]
+        if min_x > max_x or min_y > max_y or min_z > max_z:
+            raise ValueError("self_filter_boxes_base min values must be <= max values")
+        if (
+            min_x <= point_base[0] <= max_x
+            and min_y <= point_base[1] <= max_y
+            and min_z <= point_base[2] <= max_z
+        ):
+            return True
+    return False
+
+
+def _transform_point(
+    point: tuple[float, float, float],
+    translation: Sequence[float],
+    rotation_xyzw: Sequence[float],
+) -> tuple[float, float, float]:
+    rotated = _rotate_point_xyzw(point, rotation_xyzw)
+    return (
+        rotated[0] + float(translation[0]),
+        rotated[1] + float(translation[1]),
+        rotated[2] + float(translation[2]),
+    )
+
+
+def _rotate_point_xyzw(
+    point: tuple[float, float, float],
+    rotation_xyzw: Sequence[float],
+) -> tuple[float, float, float]:
+    x, y, z, w = (float(value) for value in rotation_xyzw)
+    norm = math.sqrt(x * x + y * y + z * z + w * w)
+    if norm == 0.0:
+        raise ValueError("self_filter_camera_xyzw must not be a zero quaternion")
+    x, y, z, w = x / norm, y / norm, z / norm, w / norm
+
+    px, py, pz = point
+    tx = 2.0 * (y * pz - z * py)
+    ty = 2.0 * (z * px - x * pz)
+    tz = 2.0 * (x * py - y * px)
+    return (
+        px + w * tx + (y * tz - z * ty),
+        py + w * ty + (z * tx - x * tz),
+        pz + w * tz + (x * ty - y * tx),
+    )
 
 
 def decode_depth_image_meters(
@@ -160,6 +230,10 @@ class DepthImageToPointCloudNode:
         self.node.declare_parameter("min_depth_m", 0.1)
         self.node.declare_parameter("max_depth_m", 4.0)
         self.node.declare_parameter("depth_scale", 0.001)
+        self.node.declare_parameter("self_filter_enabled", False)
+        self.node.declare_parameter("self_filter_camera_xyz", [0.0, 0.0, 0.0])
+        self.node.declare_parameter("self_filter_camera_xyzw", [0.0, 0.0, 0.0, 1.0])
+        self.node.declare_parameter("self_filter_boxes_base", [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
     def _on_camera_info(self, msg):
         self._camera_info = msg
@@ -194,6 +268,21 @@ class DepthImageToPointCloudNode:
                     stride=int(self.node.get_parameter("stride").value),
                     min_depth_m=float(self.node.get_parameter("min_depth_m").value),
                     max_depth_m=float(self.node.get_parameter("max_depth_m").value),
+                    self_filter_enabled=bool(
+                        self.node.get_parameter("self_filter_enabled").value
+                    ),
+                    self_filter_camera_xyz=tuple(
+                        float(value)
+                        for value in self.node.get_parameter("self_filter_camera_xyz").value
+                    ),
+                    self_filter_camera_xyzw=tuple(
+                        float(value)
+                        for value in self.node.get_parameter("self_filter_camera_xyzw").value
+                    ),
+                    self_filter_boxes_base=tuple(
+                        float(value)
+                        for value in self.node.get_parameter("self_filter_boxes_base").value
+                    ),
                 ),
             )
         except Exception as exc:
