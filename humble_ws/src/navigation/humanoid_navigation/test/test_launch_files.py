@@ -486,13 +486,14 @@ def test_g1_nav_usd_asset_layer_lives_in_package_assets():
 
     assert 'defaultPrim = "Robot"' in asset_text
     assert "g1-29dof_wholebody_dex1/g1_29dof_with_dex1_rev_1_0.usd" in asset_text
-    assert 'def Camera "head_d435_depth_camera"' in asset_text
+    assert 'over "front_cam"' in asset_text
+    assert "head_d435_depth_camera" not in asset_text
     assert 'custom string rosDepthTopic = "/g1/head_rgbd/depth/image_raw"' in asset_text
     assert 'custom string rosRgbTopic = "/g1/head_rgbd/rgb/image_raw"' in asset_text
     assert 'custom string rosTopic = "/g1/head_rgbd/points"' not in asset_text
     assert 'custom string rosFrameId = "g1_head_d435_depth_optical_frame"' in asset_text
-    assert "xformOp:orient" in asset_text
-    assert "xformOp:scale" in asset_text
+    assert "xformOp:orient" not in asset_text
+    assert "xformOp:scale" not in asset_text
     assert "xformOp:rotateXYZ" not in asset_text
 
 
@@ -501,6 +502,7 @@ def test_g1_nav_asset_manifest_documents_carter_map_reuse():
 
     assert manifest["asset"] == "g1_29dof_with_dex1_nav_depth.usd"
     assert manifest["mount_link"] == "d435_link"
+    assert manifest["camera_prim"] == "/Robot/d435_link/front_cam"
     assert manifest["depth_topic"] == "/g1/head_rgbd/depth/image_raw"
     assert manifest["rgb_topic"] == "/g1/head_rgbd/rgb/image_raw"
     assert manifest["pointcloud_topic"] == "/g1/head_rgbd/points"

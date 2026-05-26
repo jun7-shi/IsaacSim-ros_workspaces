@@ -1,7 +1,7 @@
 #usda 1.0
 (
     defaultPrim = "Robot"
-    doc = "Navigation-specific G1 Dex1 USD layer. It references the Unitree wholebody Dex1 robot asset and adds a head-mounted D435-style depth camera prim for ROS2 navigation bridging."
+    doc = "Navigation-specific G1 Dex1 USD layer. It references the Unitree wholebody Dex1 robot asset and marks the existing front_cam as the RGBD source for ROS2 navigation bridging."
     metersPerUnit = 1
     upAxis = "Z"
 )
@@ -12,20 +12,13 @@ def Xform "Robot" (
 {
     over "d435_link"
     {
-        def Camera "head_d435_depth_camera"
+        over "front_cam"
         {
-            custom string cameraRole = "navigation_depth"
+            custom string cameraRole = "navigation_rgbd"
             custom string rosFrameId = "g1_head_d435_depth_optical_frame"
             custom string rosDepthTopic = "/g1/head_rgbd/depth/image_raw"
             custom string rosRgbTopic = "/g1/head_rgbd/rgb/image_raw"
             float2 clippingRange = (0.05, 5)
-            float focalLength = 18.0
-            float horizontalAperture = 20.0
-            token projection = "perspective"
-            double3 xformOp:translate = (0, 0, 0)
-            quatf xformOp:orient = (1, 0, 0, 0)
-            double3 xformOp:scale = (1, 1, 1)
-            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
         }
     }
 }
