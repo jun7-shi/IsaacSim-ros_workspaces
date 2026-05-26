@@ -115,7 +115,7 @@ def test_converter_boosts_rotate_in_place_yaw_above_policy_deadband():
     ]
 
 
-def test_converter_does_not_boost_yaw_while_following_path_forward():
+def test_converter_boosts_yaw_while_following_path_forward():
     converter = CommandConverter(
         AdapterConfig(
             max_vel_theta=1.0,
@@ -129,7 +129,7 @@ def test_converter_does_not_boost_yaw_while_following_path_forward():
     assert converter.to_command(make_twist(x=0.2, yaw=0.102)) == [
         0.2,
         0.0,
-        0.102,
+        0.25,
         0.8,
     ]
 

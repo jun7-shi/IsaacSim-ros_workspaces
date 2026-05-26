@@ -63,8 +63,7 @@ class CommandConverter:
             -self._config.policy_max_vel_theta,
             self._config.policy_max_vel_theta,
         )
-        if x == 0.0 and y == 0.0:
-            yaw = self._boost_rotate_in_place_yaw(yaw)
+        yaw = self._boost_yaw_above_policy_deadband(yaw)
 
         return [
             self._round_command_value(x),
@@ -90,7 +89,7 @@ class CommandConverter:
             return 0.0
         return rounded
 
-    def _boost_rotate_in_place_yaw(self, yaw: float) -> float:
+    def _boost_yaw_above_policy_deadband(self, yaw: float) -> float:
         min_abs_yaw = min(
             abs(self._config.policy_min_abs_vel_theta),
             self._config.policy_max_vel_theta,
