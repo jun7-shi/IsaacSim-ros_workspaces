@@ -282,6 +282,27 @@ def _transform_msg_to_xyzw(transform):
     )
 
 
+def _lookup_transform_with_latest_fallback(
+    tf_buffer,
+    target_frame: str,
+    source_frame: str,
+    stamp,
+    timeout,
+    latest_stamp,
+):
+    try:
+        return tf_buffer.lookup_transform(target_frame, source_frame, stamp, timeout)
+    except Exception as exc:
+        if "extrapolation into the future" not in str(exc).lower():
+            raise
+        return tf_buffer.lookup_transform(
+            target_frame,
+            source_frame,
+            latest_stamp,
+            timeout,
+        )
+
+
 class DepthImageToPointCloudNode:
     def __init__(self):
         import rclpy
@@ -452,6 +473,7 @@ class DepthImageToPointCloudNode:
             for value in self.node.get_parameter("self_filter_camera_xyzw").value
         )
         stamp = self._Time.from_msg(header.stamp)
+        latest_stamp = self._Time()
         timeout = self._Duration(
             seconds=float(self.node.get_parameter("self_filter_tf_timeout_sec").value)
         )
@@ -459,11 +481,13 @@ class DepthImageToPointCloudNode:
         frame_boxes: list[SelfFilterFrameBox] = []
         for index, link_frame in enumerate(link_frames):
             try:
-                transform = self._tf_buffer.lookup_transform(
+                transform = _lookup_transform_with_latest_fallback(
+                    self._tf_buffer,
                     link_frame,
                     root_frame,
                     stamp,
                     timeout,
+                    latest_stamp,
                 )
             except Exception as exc:
                 self.node.get_logger().warn(

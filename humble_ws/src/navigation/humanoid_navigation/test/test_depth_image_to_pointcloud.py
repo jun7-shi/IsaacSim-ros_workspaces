@@ -3,6 +3,7 @@ from humanoid_navigation.depth_image_to_pointcloud import (
     SelfFilterFrameBox,
     camera_info_intrinsics,
     project_depth_to_points,
+    _lookup_transform_with_latest_fallback,
 )
 
 
@@ -176,3 +177,52 @@ def test_project_depth_to_points_expands_dynamic_link_boxes_by_margin():
     )
 
     assert points == [(1.12, 0.0, 1.12)]
+
+
+def test_lookup_transform_falls_back_to_latest_on_future_extrapolation():
+    class FakeBuffer:
+        def __init__(self):
+            self.calls = []
+
+        def lookup_transform(self, target_frame, source_frame, stamp, timeout):
+            self.calls.append((target_frame, source_frame, stamp, timeout))
+            if len(self.calls) == 1:
+                raise RuntimeError("Lookup would require extrapolation into the future")
+            return "latest-transform"
+
+    buffer = FakeBuffer()
+
+    transform = _lookup_transform_with_latest_fallback(
+        buffer,
+        "left_wrist_yaw_link",
+        "pelvis",
+        stamp="depth-stamp",
+        timeout="timeout",
+        latest_stamp="latest-stamp",
+    )
+
+    assert transform == "latest-transform"
+    assert buffer.calls == [
+        ("left_wrist_yaw_link", "pelvis", "depth-stamp", "timeout"),
+        ("left_wrist_yaw_link", "pelvis", "latest-stamp", "timeout"),
+    ]
+
+
+def test_lookup_transform_does_not_fallback_for_missing_frame():
+    class FakeBuffer:
+        def lookup_transform(self, target_frame, source_frame, stamp, timeout):
+            raise RuntimeError("target frame does not exist")
+
+    try:
+        _lookup_transform_with_latest_fallback(
+            FakeBuffer(),
+            "missing_link",
+            "pelvis",
+            stamp="depth-stamp",
+            timeout="timeout",
+            latest_stamp="latest-stamp",
+        )
+    except RuntimeError as exc:
+        assert "target frame does not exist" in str(exc)
+    else:
+        raise AssertionError("missing-frame lookup should not use latest fallback")
